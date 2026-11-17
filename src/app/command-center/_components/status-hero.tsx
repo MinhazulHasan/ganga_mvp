@@ -213,7 +213,7 @@ function RealSmsTile({ run, revealed }: { run: RunResult; revealed: boolean }) {
       <div className="mt-auto pt-2">
         <div className="text-[24px] font-semibold leading-none tracking-[-0.03em] tabular sm:text-[26px]">T+{real} min</div>
         <div className="mt-1.5 text-[12px] leading-snug text-subtle">
-          reported · team deck
+          reported · Kathmandu Post
           {revealed && pub !== null && <span className="text-muted"> · GANGA {(real - pub).toFixed(1)} min sooner</span>}
         </div>
       </div>

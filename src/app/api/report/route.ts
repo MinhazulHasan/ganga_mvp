@@ -16,8 +16,8 @@ const memo = new Map<string, { markdown: string; model: string; generatedAt: str
  * The alert itself (state + CAP) never depends on this call.
  */
 export async function GET(req: Request) {
-  const { scenario, scenarioId, wan, options } = parseParams(new URL(req.url));
-  const key = `${scenarioId}:${wan}`;
+  const { scenario, scenarioId, wan, eocGsm, options } = parseParams(new URL(req.url));
+  const key = `${scenarioId}:${wan}:${eocGsm ? "gsm" : "base"}`;
   const hit = memo.get(key);
   if (hit) return NextResponse.json({ ...hit, cached: true }, { headers: CACHE_HEADERS });
 
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
     `WAN uplink: ${wan === "down" ? "down for the whole event" : "up"}.`,
     `States: WATCH ${c(run.stateTimes.WATCH)}, WARNING ${c(run.stateTimes.WARNING)}, EMERGENCY ${c(run.stateTimes.EMERGENCY)}.`,
     `First public warning delivered ${c(run.summary.firstPublicWarningMin)}. A threshold gauge at ${run.gauge.km} km would have warned at ${c(run.gauge.warnMin)}.`,
-    scenario.realFirstSmsMin ? `In reality the first SMS went out at T+${scenario.realFirstSmsMin} min (team deck figure).` : "",
+    scenario.realFirstSmsMin ? `In reality the first SMS went out at T+${scenario.realFirstSmsMin} min (reported by The Kathmandu Post).` : "",
     `Villages: ${run.villages.map((v) => `${v.name} at ${v.km} km — flood ${c(v.arrivalMin)}, GANGA lead ${v.leadGangaMin ? v.leadGangaMin.toFixed(0) + " min" : "none"}, gauge lead ${v.leadGaugeMin ? v.leadGaugeMin.toFixed(0) + " min" : "none"}`).join("; ")}.`,
     `Engine evidence (time · rule · finding): ${run.evidence.map((e) => `${fmtT(e.t, true)} · ${e.rule} · ${e.title}${e.values?.length ? " [" + e.values.join(", ") + "]" : ""}`).join(" | ")}.`,
     `Message groups: ${run.groups.map((g) => `${g.name}: ${g.firstDeliveryMin == null ? "received nothing" : "first message " + c(g.firstDeliveryMin)}`).join("; ")}.`,

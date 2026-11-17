@@ -30,7 +30,7 @@ export function useCloudView(): { phase: CloudPhase; gapS: number; wanAt: number
 export function useCloudStatusText(): { phase: CloudPhase; text: string } {
   const run = useRun();
   const { phase, gapS, staleAt } = useCloudView();
-  if (phase === "live") return { phase, text: "Cloud dashboard · live" };
+  if (phase === "live") return { phase, text: "Cloud link up" };
   if (phase === "gap") return { phase, text: `No data for ${gapS} s` };
   return { phase, text: `STALE since ${clock(run.scenario, staleAt ?? 0)} · not an all-clear` };
 }
@@ -59,7 +59,7 @@ export function CloudViewHero() {
           className="inline-flex h-7 items-center gap-1.5 rounded-full bg-surface-2 px-2.5 text-[12px] font-medium text-muted hairline"
         >
           <span className="size-1.5 rounded-full bg-normal-fill" aria-hidden />
-          Cloud dashboard · live
+          Cloud link up
         </motion.span>
       ) : phase === "gap" ? (
         <motion.span

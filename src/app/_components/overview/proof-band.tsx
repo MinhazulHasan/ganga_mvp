@@ -113,7 +113,7 @@ export function ProofBand({ facts, lives, smsSource }: { facts: OverviewFacts; l
             <CompareBar label="First real SMS" value={`T+${sms} min`} fraction={1} show={show} reduce={reduce} delay={0.12} />
           </span>
         )}
-        <Source>Engine replay · real SMS from the {smsSource.label.split(" (")[0]}</Source>
+        <Source>Engine replay · real SMS from {smsSource.label.split(/,| —| \(/)[0]}</Source>
       </Cell>
 
       {/* 2 · villages with 10+ minutes */}

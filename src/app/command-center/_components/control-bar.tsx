@@ -107,16 +107,16 @@ export function SmsSwitch({ className, compact = false }: { className?: string; 
   );
 }
 
-/** Icon-only (the console row is capped at 1440 px and What-if needs the room); the tooltip names it. */
+/** Labelled outline button: an icon alone was easy to miss. The tooltip says what it does. */
 export function ResetButton({ className }: { className?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon-sm" onClick={() => reset()} aria-label="Reset the replay" className={cn("text-muted hover:text-foreground", className)}>
-          <RotateCcwIcon />
+        <Button variant="outline" size="sm" onClick={() => reset()} className={className}>
+          <RotateCcwIcon /> Reset
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="bottom">Reset the replay</TooltipContent>
+      <TooltipContent side="bottom">Back to 08:37, WAN up</TooltipContent>
     </Tooltip>
   );
 }
@@ -143,10 +143,10 @@ export function ControlBar() {
             <ScenarioSwitch />
             <SpeedSwitch />
             <WhatIfControl placement="bar" />
-            <div className="ml-auto flex items-center gap-4 min-[1440px]:gap-5">
+            <div className="ml-auto flex items-center gap-2.5 min-[1440px]:gap-5">
               <WanSwitch />
               <SmsSwitch compact />
-              <ResetButton className="-ml-1" />
+              <ResetButton />
             </div>
           </div>
           <TimelineScrubber />

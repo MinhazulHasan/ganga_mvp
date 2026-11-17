@@ -29,7 +29,7 @@ export function NetworkMini({ className }: { className?: string }) {
   // The cloud dashboard's view of the site (Andrrew's rule: > 15 s without data = STALE).
   const cloud = useCloudView();
   const cloudSub =
-    cloud.phase === "live" ? "dashboard · live" : cloud.phase === "gap" ? `no data · ${cloud.gapS} s` : `STALE · ${clock(s, cloud.staleAt ?? 0)}`;
+    cloud.phase === "live" ? "cloud link up" : cloud.phase === "gap" ? `no data · ${cloud.gapS} s` : `STALE · ${clock(s, cloud.staleAt ?? 0)}`;
 
   const cx = W / 2;
   const leafW = Math.min(104, (W - 28 - 16) / 3);

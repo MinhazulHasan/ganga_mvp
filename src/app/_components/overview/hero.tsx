@@ -51,7 +51,7 @@ export function Hero() {
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-            <Button asChild variant="brand" size="lg" className="h-12 rounded-[14px] px-6 text-[15px]">
+            <Button asChild size="lg" className="h-12 rounded-[14px] px-6 text-[15px]">
               <Link href="/command-center">
                 <LayoutDashboardIcon /> Open Command Center
               </Link>

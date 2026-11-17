@@ -331,33 +331,37 @@ function ReportPanel() {
   const run = useRun();
   const s = run.scenario;
   const wanCut = useSim((st) => st.wanDownFromMin !== null);
+  const eocGsm = useSim((st) => st.eocGsm);
   const modified = useSim((st) => !isWhatIfDefault(st.whatIf, getScenario(st.scenarioId)) || !isTeamBroadcast(st.broadcast));
-  const [reports, setReports] = React.useState<Partial<Record<ScenarioId, ReportState>>>({});
-  const report: ReportState = reports[s.id] ?? { status: "idle" };
+  // One report per combination the report depends on, so a changed toggle never shows an older report.
+  const reportKey = `${s.id}:${wanCut ? "down" : "up"}:${eocGsm ? "gsm" : "base"}`;
+  const [reports, setReports] = React.useState<Record<string, ReportState>>({});
+  const report: ReportState = reports[reportKey] ?? { status: "idle" };
 
   const generate = async () => {
     const id = s.id;
-    setReports((r) => ({ ...r, [id]: { status: "loading" } }));
+    const key = reportKey;
+    setReports((r) => ({ ...r, [key]: { status: "loading" } }));
     try {
-      const res = await fetch(`/api/report?scenario=${id}&wan=${wanCut ? "down" : "up"}`);
+      const res = await fetch(`/api/report?scenario=${id}&wan=${wanCut ? "down" : "up"}&eocGsm=${eocGsm ? 1 : 0}`);
       const body = (await res.json().catch(() => ({}))) as { markdown?: string; model?: string; generatedAt?: string; cached?: boolean; error?: string };
       if (!res.ok || !body.markdown) {
         const unconfigured = res.status === 503;
         const message = unconfigured
           ? "Report service not set up here. Alerts do not depend on it."
           : body.error ?? `Report service returned ${res.status}.`;
-        setReports((r) => ({ ...r, [id]: { status: "error", message, unconfigured } }));
+        setReports((r) => ({ ...r, [key]: { status: "error", message, unconfigured } }));
         toast.error(unconfigured ? "Report service not configured" : "Report failed", { description: message });
         return;
       }
       setReports((r) => ({
         ...r,
-        [id]: { status: "done", markdown: body.markdown!, model: body.model ?? "unknown model", generatedAt: body.generatedAt ?? "", cached: !!body.cached },
+        [key]: { status: "done", markdown: body.markdown!, model: body.model ?? "unknown model", generatedAt: body.generatedAt ?? "", cached: !!body.cached },
       }));
       toast.success("Report ready", { description: body.cached ? "From cache" : body.model });
     } catch {
       const message = "Report service unreachable. Try again.";
-      setReports((r) => ({ ...r, [id]: { status: "error", message, unconfigured: false } }));
+      setReports((r) => ({ ...r, [key]: { status: "error", message, unconfigured: false } }));
       toast.error("Report failed", { description: message });
     }
   };

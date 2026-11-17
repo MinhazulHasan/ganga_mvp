@@ -44,7 +44,7 @@ export function ClosingCta() {
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-              <Button asChild variant="brand" size="lg" className="h-12 rounded-[14px] px-6 text-[15px]">
+              <Button asChild size="lg" className="h-12 rounded-[14px] px-6 text-[15px]">
                 <Link href="/command-center">
                   <LayoutDashboardIcon /> Open Command Center
                 </Link>

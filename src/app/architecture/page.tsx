@@ -9,7 +9,6 @@ import { Coverage } from "./_components/coverage";
 import { Failover } from "./_components/failover";
 import { PowerPath } from "./_components/power";
 import { Valley } from "./_components/valley";
-import { FusionSteps, RulesAndThresholds, FusionCta } from "./_components/fusion";
 
 export const metadata = {
   title: "Architecture",
@@ -79,12 +78,6 @@ export default function Page() {
 
       <Section id="valley" className="scroll-mt-16" eyebrow="05 · Backhaul" title="Reaching the valley and the server">
         <Valley />
-      </Section>
-
-      <Section id="engine" className="scroll-mt-16" tone="muted" eyebrow="06 · Inside the valley station" title="How the engine decides">
-        <FusionSteps />
-        <RulesAndThresholds />
-        <FusionCta />
       </Section>
     </DetailSheetProvider>
   );

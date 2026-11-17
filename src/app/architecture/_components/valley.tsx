@@ -41,7 +41,7 @@ const D = {
     ],
     links: [
       { href: "/network", label: "See the station network" },
-      { href: "#engine", label: "How the engine decides" },
+      { href: "/#fusion-engine", label: "How the engine decides" },
     ],
   },
   siren: {
@@ -169,9 +169,11 @@ export function Valley() {
               station
             </SvgText>
           </SvgHit>
-          <SvgText x={621} y={284} anchor="middle" size={10.5} weight={600} className="fill-primary">
-            Fusion engine runs here
-          </SvgText>
+          <Link href="/#fusion-engine" aria-label="Fusion engine runs here: how it decides" className="outline-none [&:focus-visible>text]:underline [&:hover>text]:underline">
+            <SvgText x={621} y={284} anchor="middle" size={10.5} weight={600} className="fill-primary">
+              Fusion engine runs here →
+            </SvgText>
+          </Link>
 
           {/* siren (offline) */}
           <path d="M676 166 L760 92" className="fill-none stroke-emergency" strokeWidth={2.2} strokeLinecap="round" />

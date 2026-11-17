@@ -12,7 +12,6 @@ export const archNav = [
   { id: "radio", n: "03", label: "Radio failover" },
   { id: "power", n: "04", label: "Power" },
   { id: "valley", n: "05", label: "Valley & server" },
-  { id: "engine", n: "06", label: "Fusion engine" },
 ] as const;
 
 /** Every part on the page, for the Built / Simulated / Planned counts in the header. */

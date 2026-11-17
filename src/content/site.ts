@@ -20,7 +20,7 @@ export type NavItem = { href: string; label: string; description: string };
 export const nav: NavItem[] = [
   { href: "/", label: "Overview", description: "Problem and proof." },
   { href: "/command-center", label: "Command Center", description: "Simulate the Rasuwa flood." },
-  { href: "/architecture", label: "Architecture", description: "Edge and cloud design." },
+  { href: "/architecture", label: "Architecture", description: "RTUs, radio failover and the valley station." },
   { href: "/network", label: "Network", description: "Camp network design." },
   { href: "/field", label: "Field & Cost", description: "Sensors, power and cost." },
   { href: "/team", label: "Team", description: "Team PASS and our mentor." },

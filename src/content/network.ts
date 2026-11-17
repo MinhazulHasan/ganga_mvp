@@ -21,7 +21,7 @@ export const ptDevices: PtDevice[] = [
   { id: "admin", label: "Admin PC", model: "PC-PT", role: "Network management", vlan: 10, addressing: "10.0.10.0/24 · DHCP", kind: "pc" },
   { id: "broker", label: "Broker + Fusion server", model: "Server-PT", role: "MQTT broker and fusion engine", vlan: 20, addressing: "10.0.20.0/24 · static (IP to confirm)", kind: "server" },
   { id: "dns", label: "DNS / Web server", model: "Server-PT", role: "BIND9 DNS and the dashboard", vlan: 20, addressing: "10.0.20.0/24 · static (IP to confirm)", kind: "server" },
-  { id: "gw", label: "Gateway PC", model: "PC-PT", role: "LoRa gateway stand-in", vlan: 30, addressing: "10.0.30.0/24 · DHCP", kind: "pc" },
+  { id: "gw", label: "Gateway PC", model: "PC-PT", role: "Station receiver stand-in (LoRa + VHF)", vlan: 30, addressing: "10.0.30.0/24 · DHCP", kind: "pc" },
   { id: "op", label: "Operator PC", model: "PC-PT", role: "Flood operators' console", vlan: 50, addressing: "10.0.50.0/24 · DHCP", kind: "pc" },
 ];
 

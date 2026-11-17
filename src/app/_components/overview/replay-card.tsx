@@ -337,7 +337,7 @@ export function ReplayCard() {
                   <span className="absolute inset-0 rounded-full bg-normal-fill animate-pulse-ring" />
                   <span className="relative size-1.5 rounded-full bg-normal-fill" />
                 </span>
-                Listening to {run.nodes.length} sensor nodes · heartbeat every {run.options.heartbeatS} s
+                Listening to {run.nodes.length} RTUs · heartbeat every {run.options.heartbeatS} s
               </li>
             )}
             <AnimatePresence initial={false}>

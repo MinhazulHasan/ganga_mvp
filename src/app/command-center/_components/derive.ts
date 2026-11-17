@@ -50,11 +50,11 @@ export function heroSentence(run: RunResult, t: number): string {
   const flood = next ? `flood reaches ${shortName(next.name)} in ${fmtDuration(next.arrivalMin - t)}` : null;
   const pub = run.summary.firstPublicWarningMin;
 
-  if (state === "NORMAL") return `All ${run.nodes.length} nodes reporting\u00a0· no anomaly`;
+  if (state === "NORMAL") return `All ${run.nodes.length} RTUs reporting\u00a0· no anomaly`;
   if (state === "WATCH") {
     const a = firstAnomaly(run, t);
     const what = a?.kind === "rise" ? "rising water" : "ground vibration";
-    return `${a?.node ?? "A node"} felt ${what}\u00a0· officials told, public not yet`;
+    return `${a?.node ?? "An RTU"} felt ${what}\u00a0· officials told, public not yet`;
   }
   if (!flood) return `Flood has passed all ${run.villages.length} villages`;
   if (state === "EMERGENCY") return `Evacuate now\u00a0· ${flood}`;

@@ -124,7 +124,7 @@ export function PowerBudget() {
                 .
               </p>
               <p className="mt-2 text-sm leading-relaxed text-muted">
-                During an event, nodes burst every {RULES.burstS} s.
+                During an event, RTUs report every {RULES.burstS} s.
               </p>
             </div>
             <p className="mt-auto flex items-start gap-2 pt-5 text-xs leading-relaxed text-subtle">

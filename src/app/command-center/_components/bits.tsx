@@ -72,7 +72,7 @@ export function Caption({ className, ...props }: React.ComponentProps<"p">) {
 
 const RULE_EXTRA: Record<string, string> = {
   ETA: "ETA · Arrival times from measured wave speed",
-  HB: "HB · Heartbeat check · a quiet node missed reports",
+  HB: "HB · Heartbeat check · a quiet RTU missed reports",
 };
 
 export function ruleText(rule: string): string {

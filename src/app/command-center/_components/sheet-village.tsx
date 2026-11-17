@@ -75,7 +75,7 @@ export function VillageSheet({ run, village: v }: { run: RunResult; village: Vil
         <section>
           <Caption>Arrival estimate over time</Caption>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">
-            Assumes {RULES.priorSpeedMs} m/s until two nodes go silent, so early estimates err early. First estimate {clock(s, firstGuess).slice(0, 5)}; actual {clock(s, v.arrivalMin).slice(0, 5)}.
+            Assumes {RULES.priorSpeedMs} m/s until two RTUs go silent, so early estimates err early. First estimate {clock(s, firstGuess).slice(0, 5)}; actual {clock(s, v.arrivalMin).slice(0, 5)}.
           </p>
           <LineChart responsive style={{ width: "100%", height: 190 }} data={data} margin={{ top: 14, right: 10, bottom: 0, left: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--border)" />

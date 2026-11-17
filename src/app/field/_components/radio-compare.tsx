@@ -16,7 +16,7 @@ export function RadioCompare() {
     <Section
       tone="muted"
       eyebrow="Radio choice"
-      title="Why LoRa"
+      title="LoRa first, VHF as backup"
           >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
         {radioOptions.map((o, i) => {
@@ -32,11 +32,11 @@ export function RadioCompare() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-[19px] font-semibold tracking-[-0.025em]">{o.name}</h3>
-                    <p className="mt-0.5 text-[13px] text-muted">{selected ? "Private radio network" : o.sub}</p>
+                    <p className="mt-0.5 text-[13px] text-muted">{o.sub}</p>
                   </div>
-                  {selected && (
+                  {selected && "badge" in o && (
                     <Badge variant="solid" size="md">
-                      <CheckIcon aria-hidden /> Selected
+                      <CheckIcon aria-hidden /> {o.badge}
                     </Badge>
                   )}
                 </div>

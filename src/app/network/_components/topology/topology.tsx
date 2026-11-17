@@ -33,7 +33,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { useCommandStore } from "@/lib/stores/command-store";
 import { iosLog, ptDevices } from "@/content/network";
-import { members } from "@/content/team";
 import { useMediaQuery, useMounted, useNetworkState, usePrefersReducedMotion } from "../network-state";
 import { NetSheet, useNetSheet } from "../net-sheet";
 import { ospfFacts, parseIos, type IosLine } from "../net-utils";

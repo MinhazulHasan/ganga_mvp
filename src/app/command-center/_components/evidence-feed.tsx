@@ -103,7 +103,7 @@ function ListeningState({ run }: { run: RunResult }) {
         <span className="absolute inset-0 rounded-full bg-normal-fill/30 animate-pulse-ring" aria-hidden />
         <RadioIcon className="relative size-5" aria-hidden />
       </span>
-      <p className="text-[15px] font-medium">All {run.nodes.length} nodes reporting. Listening…</p>
+      <p className="text-[15px] font-medium">All {run.nodes.length} RTUs reporting. Listening…</p>
       <p className="max-w-[30ch] text-[13px] leading-relaxed text-muted">
         Evidence appears here the moment a rule fires. Press Play or <span className="font-medium text-foreground">Space</span>.
       </p>

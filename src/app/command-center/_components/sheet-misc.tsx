@@ -265,7 +265,7 @@ export function AssumptionsSheet({ run }: { run: RunResult }) {
     ["Rate of rise", `${RULES.riseCmMin} cm/min`],
     ["Event-mode report interval", `${RULES.burstS} s`],
     ["Silent after", `${RULES.missedBursts} missed bursts (event mode) · ${RULES.missedHeartbeats} heartbeats (quiet)`],
-    ["Gateway-fault window", `${RULES.gatewayWindowS} s`],
+    ["Receiver-fault window", `${RULES.gatewayWindowS} s`],
     ["Speed assumed before measuring", `${RULES.priorSpeedMs} m/s (worst case)`],
   ];
   return (

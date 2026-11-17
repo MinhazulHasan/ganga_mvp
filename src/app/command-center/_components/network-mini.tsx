@@ -39,7 +39,7 @@ export function NetworkMini({ className }: { className?: string }) {
     { id: "r1", label: device("r1")?.label ?? "GANGA-R1", sub: device("r1")?.model ?? "", icon: RouterIcon, x: cx, y: 102, w: 136, h: 34 },
     { id: "sw", label: device("sw")?.label ?? "GANGA_SW", sub: "Layer-3 switch", icon: NetworkIcon, x: cx, y: 160, w: 136, h: 34 },
     { id: "broker", label: "Broker/engine", sub: "VLAN 20", icon: ServerIcon, x: leafXs[0], y: 224, w: leafW, h: 38 },
-    { id: "gw", label: "Gateway", sub: "VLAN 30", icon: RadioTowerIcon, x: leafXs[1], y: 224, w: leafW, h: 38 },
+    { id: "gw", label: "Receiver", sub: "VLAN 30", icon: RadioTowerIcon, x: leafXs[1], y: 224, w: leafW, h: 38 },
     { id: "op", label: "Operators", sub: "VLAN 50", icon: MonitorIcon, x: leafXs[2], y: 224, w: leafW, h: 38 },
   ];
   const byId = Object.fromEntries(chips.map((c) => [c.id, c]));

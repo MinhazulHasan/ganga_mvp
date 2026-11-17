@@ -131,7 +131,7 @@ export function outcomeDiff(base: RunResult, cur: RunResult): DiffRow[] {
   push("gauge", "Gauge warning", fmtT(base.gauge.warnMin, true), fmtT(cur.gauge.warnMin, true));
   push(
     "silent",
-    "Quiet node missed after",
+    "Quiet RTU missed after",
     `${Math.round(base.options.heartbeatS * RULES.missedHeartbeats)} s`,
     `${Math.round(cur.options.heartbeatS * RULES.missedHeartbeats)} s`
   );

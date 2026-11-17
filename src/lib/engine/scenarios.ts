@@ -20,7 +20,7 @@ export const aug26: Scenario = {
   kind: "reconstructed",
   description:
     "A rock-ice avalanche from the Lirung massif dammed the Lhende Khola. The dam failed and a debris flood ran down the Bhote Koshi into the Trishuli.",
-  nodesKm: [6, 15, 28, 50, 75],
+  nodesKm: [6, 15, 44],
   villages: [
     { id: "rasuwagadhi", name: "Rasuwagadhi / Gyirong Port", km: 22, note: "Nepal–China border crossing" },
     { id: "timure", name: "Timure", km: 32 },
@@ -44,7 +44,7 @@ export const aug26: Scenario = {
   assumptions: [
     "River distances come from the Team PASS simulator and are approximate.",
     "The flood front is modelled between two published timings: Rasuwagadhi at 08:44 and the downstream gauge at 11:20. Real speeds varied along the valley.",
-    "Sensor readings are simulated. Nodes N1–N2 sit in the Lhende Khola catchment, which straddles the Nepal–China border, so a real deployment needs cross-border data sharing.",
+    "Sensor readings are simulated. Three RTUs: the lake RTU at the Lhende Khola outlet (6 km), the gorge RTU (15 km) and the confluence RTU above Syaphrubesi (44 km). The first two sit in a catchment that straddles the Nepal–China border, so a real deployment needs cross-border data sharing.",
     "Thresholds are placeholders until a pilot season calibrates them.",
   ],
 };
@@ -61,7 +61,7 @@ export const template: Scenario = {
   utcOffset: "+05:45",
   kind: "illustrative",
   description: "A made-up valley with a constant 8 m/s flood front. Use it to show how GANGA ports to another river.",
-  nodesKm: [5, 12, 25, 40],
+  nodesKm: [5, 12, 30],
   villages: [
     { id: "a", name: "Village A", km: 15 },
     { id: "b", name: "Village B", km: 35 },

@@ -31,6 +31,7 @@ export interface Scenario {
   utcOffset: string;
   kind: "reconstructed" | "illustrative";
   description: string;
+  /** RTU positions (km from the source), upstream first: lake, gorge, confluence. */
   nodesKm: number[];
   villages: Village[];
   gaugeKm: number;
@@ -109,9 +110,17 @@ export interface Reading {
   vib: number;
 }
 
+export type RtuRole = "lake" | "gorge" | "confluence";
+
 export interface NodeTrack {
+  /** "RTU1", "RTU2", … upstream first */
   id: string;
   label: string;
+  role: RtuRole;
+  /** e.g. "Lake RTU" */
+  name: string;
+  /** Needs a mountain signal booster to reach the valley station (no line of sight). */
+  booster: boolean;
   km: number;
   /** minute the flood front reaches the node (node destroyed) */
   hitMin: number;

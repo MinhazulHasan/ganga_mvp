@@ -229,7 +229,7 @@ function WhatIfPanel({ kind }: { kind: Kind }) {
             value={shown("heartbeatS")}
             def={s.heartbeatS}
             onChange={change}
-            hint={() => `Quiet-node report interval. Event mode: every ${RULES.burstS} s.`}
+            hint={() => `Quiet-RTU report interval. Event mode: every ${RULES.burstS} s.`}
           />
           <SliderRow k="geophoneRangeKm" value={shown("geophoneRangeKm")} def={s.geophoneRangeKm} onChange={change} hint={(v) => geophoneHint(run, v)} />
           <SliderRow k="procDelayS" value={shown("procDelayS")} def={s.procDelayS} onChange={change} hint={() => "Engine time before an alert leaves."} />
@@ -262,7 +262,7 @@ function WhatIfPanel({ kind }: { kind: Kind }) {
 
 function geophoneHint(run: RunResult, km: number): string {
   const inRange = run.nodes.filter((n) => n.km <= km).map((n) => n.id);
-  if (!inRange.length) return "No node feels the collapse. WATCH waits for rising water.";
+  if (!inRange.length) return "No RTU feels the collapse. WATCH waits for rising water.";
   const list = inRange.length > 2 ? `${inRange[0]}–${inRange[inRange.length - 1]}` : inRange.join(" and ");
   return `Feel the collapse: ${list}`;
 }

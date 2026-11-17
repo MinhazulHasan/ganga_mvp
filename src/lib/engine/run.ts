@@ -6,6 +6,7 @@ import type {
   GroupSummary,
   NodeTrack,
   Reading,
+  RtuRole,
   RunOptions,
   RunResult,
   Scenario,
@@ -30,13 +31,22 @@ export const RULES = {
 
 export const RULE_TEXT = {
   R1: "R1 · Single anomaly → WATCH (officials only)",
-  R2: "R2 · Two signals agree at one node → WARNING",
-  R3: "R3 · Rate-of-rise at two nodes → WARNING",
-  R4: "R4 · Node silent after an anomaly = flood evidence → WARNING",
-  R5: "R5 · Two nodes die in downstream order → EMERGENCY",
-  R6: "R6 · Nodes silent together with no anomaly = gateway fault, not a flood",
+  R2: "R2 · Two signals agree at one RTU → WARNING",
+  R3: "R3 · Rate-of-rise at two RTUs → WARNING",
+  R4: "R4 · RTU silent after an anomaly = flood evidence → WARNING",
+  R5: "R5 · Two RTUs die in downstream order → EMERGENCY",
+  R6: "R6 · RTUs silent together with no anomaly = receiver fault, not a flood",
   R7: "R7 · Vibration alone never warns the public (earthquakes, traffic)",
 } as const;
+
+/* ------------------------------------------------------------------
+   RTU roles (Team PASS field design): three checkpoints, upstream first
+------------------------------------------------------------------- */
+export const RTU_ROLES = [
+  { role: "lake", name: "Lake RTU", short: "Lake", booster: true, job: "Primary · at the lake outlet, sees the breach first" },
+  { role: "gorge", name: "Gorge RTU", short: "Gorge", booster: true, job: "Backup · in the narrow gorge, takes over if the lake RTU goes silent" },
+  { role: "confluence", name: "Confluence RTU", short: "Confluence", booster: false, job: "Where the tributary joins · combined volume and travel speed" },
+] as const satisfies readonly { role: RtuRole; name: string; short: string; booster: boolean; job: string }[];
 
 /* ------------------------------------------------------------------
    Flood-front model (piecewise linear between published anchors)
@@ -132,9 +142,13 @@ export function runScenario(base: Scenario, opts: RunOptions & { gatewayFailAtMi
     .sort((a, b) => a - b)
     .map((km, i) => {
       const hitMin = arrivalMinAtKm(scenario, km);
+      const r = RTU_ROLES[Math.min(i, RTU_ROLES.length - 1)];
       return {
-        id: `N${i + 1}`,
-        label: `N${i + 1} · ${km} km`,
+        id: `RTU${i + 1}`,
+        label: `RTU${i + 1} · ${r.short} · ${km} km`,
+        role: r.role,
+        name: r.name,
+        booster: r.booster,
         km,
         hitMin,
         risingFromMin: Math.max(0, hitMin - scenario.rampS / 60),
@@ -258,8 +272,8 @@ export function runScenario(base: Scenario, opts: RunOptions & { gatewayFailAtMi
               kind: "gateway",
               rule: "R6",
               title: "Gateway fault suspected",
-              detail: `${silentNow} nodes went silent together without any anomaly. Treated as a gateway or backhaul fault — officials are told, the public is not.`,
-              values: [`${silentNow}/${nodes.length} nodes silent within ${RULES.gatewayWindowS} s`],
+              detail: `${silentNow} RTUs went silent together without any anomaly. Treated as a station receiver or radio fault — officials are told, the public is not.`,
+              values: [`${silentNow}/${nodes.length} RTUs silent within ${RULES.gatewayWindowS} s`],
             });
           }
         } else {
@@ -319,7 +333,7 @@ export function runScenario(base: Scenario, opts: RunOptions & { gatewayFailAtMi
     const riseNodes = ns.filter((x) => x.riseAt !== null).length;
     if (state === "NORMAL" && (vibNodes > 0 || riseNodes > 0)) {
       const first = evidence.find((e) => e.kind === "vibration" || e.kind === "rise");
-      escalate("WATCH", tMin, "R1", `${first?.node ?? "A node"} reported an anomaly. ${RULE_TEXT.R7.split("· ")[1]}.`);
+      escalate("WATCH", tMin, "R1", `${first?.node ?? "An RTU"} reported an anomaly. ${RULE_TEXT.R7.split("· ")[1]}.`);
     }
     if (STATE_RANK[state] < STATE_RANK.WARNING) {
       const both = nodes.find((_, i) => ns[i].vibAt !== null && ns[i].riseAt !== null);
@@ -334,7 +348,7 @@ export function runScenario(base: Scenario, opts: RunOptions & { gatewayFailAtMi
         });
         escalate("WARNING", tMin, "R2", `Corroborated at ${both.id}. Residents are warned.`);
       } else if (riseNodes >= 2) {
-        escalate("WARNING", tMin, "R3", "Rate-of-rise at two nodes. Residents are warned.");
+        escalate("WARNING", tMin, "R3", "Rate-of-rise at two RTUs. Residents are warned.");
       } else if (deaths.length >= 1) {
         escalate("WARNING", tMin, "R4", `${deaths[0].node} went silent after an anomaly. Residents are warned.`);
       }

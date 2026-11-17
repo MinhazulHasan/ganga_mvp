@@ -215,11 +215,11 @@ export function DataFlow({ facts, details }: { facts: OverviewFacts; details: Fl
               "lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)_auto_minmax(236px,1.5fr)] lg:grid-rows-[auto_auto] lg:items-center lg:gap-x-5 lg:gap-y-5 xl:gap-x-8"
             )}
           >
-            <FlowNode flowId="sensors" icon={CpuIcon} title="Sensor nodes" sub={`${facts.scenario.nodesKm.length} on the river · level + vibration`} kind={details.sensors.provenance} onOpen={() => open("sensors")} className="col-span-2 row-start-1 lg:col-span-1 lg:col-start-1 lg:row-span-2 lg:row-start-1" />
-            <FlowChip flowId="lora" icon={RadioIcon} label="LoRa" kind={details.lora.provenance} onOpen={() => open("lora")} className="col-span-2 row-start-2 lg:col-span-1 lg:col-start-2 lg:row-span-2 lg:row-start-1" />
-            <FlowNode flowId="gateway" icon={RouterIcon} title="LoRa gateway" sub="Raspberry Pi 5 · to MQTT" kind={details.gateway.provenance} onOpen={() => open("gateway")} className="col-span-2 row-start-3 lg:col-span-1 lg:col-start-3 lg:row-span-2 lg:row-start-1" />
+            <FlowNode flowId="sensors" icon={CpuIcon} title="RTUs" sub={`${facts.scenario.nodesKm.length} on the river · wired sensors`} kind={details.sensors.provenance} onOpen={() => open("sensors")} className="col-span-2 row-start-1 lg:col-span-1 lg:col-start-1 lg:row-span-2 lg:row-start-1" />
+            <FlowChip flowId="lora" icon={RadioIcon} label="LoRa · VHF" kind={details.lora.provenance} onOpen={() => open("lora")} className="col-span-2 row-start-2 lg:col-span-1 lg:col-start-2 lg:row-span-2 lg:row-start-1" />
+            <FlowNode flowId="gateway" icon={RouterIcon} title="Station receiver" sub="LoRa + VHF · to MQTT" kind={details.gateway.provenance} onOpen={() => open("gateway")} className="col-span-2 row-start-3 lg:col-span-1 lg:col-start-3 lg:row-span-2 lg:row-start-1" />
             <FlowNode flowId="broker" icon={ServerIcon} title="MQTT broker" sub="Mosquitto · TLS 8883" kind={details.broker.provenance} onOpen={() => open("broker")} className="col-span-2 row-start-4 lg:col-span-1 lg:col-start-4 lg:row-span-2 lg:row-start-1" />
-            <FlowNode flowId="fusion" icon={BrainCircuitIcon} title="Fusion engine" sub="Decides on the edge" kind={details.fusion.provenance} emphasis onOpen={() => open("fusion")} className="col-span-2 row-start-5 lg:col-span-1 lg:col-start-5 lg:row-span-2 lg:row-start-1" />
+            <FlowNode flowId="fusion" icon={BrainCircuitIcon} title="Fusion engine" sub="Decides in the valley" kind={details.fusion.provenance} emphasis onOpen={() => open("fusion")} className="col-span-2 row-start-5 lg:col-span-1 lg:col-start-5 lg:row-span-2 lg:row-start-1" />
 
             {/* WAN uplink */}
             <FlowChip

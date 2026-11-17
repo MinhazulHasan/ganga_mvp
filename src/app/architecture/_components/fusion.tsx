@@ -13,7 +13,7 @@ const THRESHOLDS: { label: string; value: number; unit: string }[] = [
   { label: "Burst interval", value: RULES.burstS, unit: "s" },
   { label: "Missed bursts", value: RULES.missedBursts, unit: "bursts" },
   { label: "Missed heartbeats", value: RULES.missedHeartbeats, unit: "heartbeats" },
-  { label: "Gateway window", value: RULES.gatewayWindowS, unit: "s" },
+  { label: "Receiver-fault window", value: RULES.gatewayWindowS, unit: "s" },
   { label: "Worst-case prior speed", value: RULES.priorSpeedMs, unit: "m/s" },
 ];
 

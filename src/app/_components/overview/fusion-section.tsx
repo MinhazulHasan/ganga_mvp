@@ -112,13 +112,13 @@ export function FusionSection({ facts }: { facts: OverviewFacts }) {
                   <Moment
                     clock={emergency.clock}
                     title={`${n2.node} silent too → EMERGENCY`}
-                    detail={`Two nodes lost in downstream order.${firstSpeed ? ` Wave speed about ${firstSpeed.ms} m/s.` : ""}`}
+                    detail={`Two RTUs lost in downstream order.${firstSpeed ? ` Wave speed about ${firstSpeed.ms} m/s.` : ""}`}
                     tag={emergency.rule}
                   />
                 )}
               </ol>
               <p className="mt-6 border-t border-border pt-4 text-[13px] leading-relaxed text-muted">
-                The time between two silent nodes gives the wave speed.
+                The time between two silent RTUs gives the wave speed.
               </p>
             </div>
           </Appear>

@@ -8,10 +8,10 @@ import { CostSection } from "./_components/cost-section";
 
 export const metadata = {
   title: "Field & Cost",
-  description: "Signal chain, radio choice, solar power budget and cost.",
+  description: "Wired sensors, RTU, LoRa with VHF fallback, solar power budget and cost.",
 };
 
-const META = ["LoRa 2–15 km", "Solar powered", "MQTT over TLS :8883", "VLAN 30 isolated"];
+const META = ["Wired sensors", "LoRa + VHF fallback", "Solar powered", "MQTT over TLS :8883"];
 
 export default function Page() {
   return (

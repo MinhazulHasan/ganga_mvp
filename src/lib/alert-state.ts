@@ -13,7 +13,7 @@ export const STATE_META: Record<
   NORMAL: {
     label: "Normal",
     short: "NORMAL",
-    description: "All nodes reporting, no anomaly.",
+    description: "All RTUs reporting, no anomaly.",
     icon: ShieldCheckIcon,
     text: "text-normal",
     soft: "bg-normal-soft",
@@ -33,7 +33,7 @@ export const STATE_META: Record<
   WARNING: {
     label: "Warning",
     short: "WARNING",
-    description: "Signals agree, or a node went silent after rising water. Residents are warned.",
+    description: "Signals agree, or an RTU went silent after rising water. Residents are warned.",
     icon: TriangleAlertIcon,
     text: "text-warning",
     soft: "bg-warning-soft",

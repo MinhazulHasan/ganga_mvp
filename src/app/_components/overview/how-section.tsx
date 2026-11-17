@@ -50,7 +50,7 @@ export function HowSection({ facts }: { facts: OverviewFacts }) {
     return c ? { ...componentDetail(tierId, c), provenance: c.provenance } : { title: name, provenance: fallback ?? "planned" };
   };
 
-  const sensors = pick("field", "Sensor nodes");
+  const sensors = pick("field", "RTUs");
   const heartbeat = find("field", "Heartbeat");
   const fusion = pick("edge", "GANGA fusion engine", "built");
   const llm = pick("cloud", "LLM", "built");
@@ -61,19 +61,19 @@ export function HowSection({ facts }: { facts: OverviewFacts }) {
       ...sensors,
       rowsTitle: "In the Rasuwa flood replay",
       rows: [
-        { label: "Nodes on the river", value: facts.scenario.nodesKm.map((k) => `${k} km`).join(" · ") },
+        { label: "RTUs on the river", value: facts.scenario.nodesKm.map((k) => `${k} km`).join(" · ") },
         { label: "Heartbeat", value: `every ${facts.scenario.heartbeatS} s` },
         { label: "During an event", value: `a reading every ${facts.rules.burstS} s` },
       ],
       paragraphs: heartbeat ? [heartbeat.detail] : undefined,
     },
     lora: pick("field", "LoRa radio"),
-    gateway: pick("field", "LoRa gateway"),
+    gateway: pick("edge", "Station receiver"),
     broker: pick("edge", "MQTT broker"),
     fusion: {
       ...fusion,
       list: {
-        title: "Four steps on the edge",
+        title: "Four steps at the valley station",
         items: fusionSteps.map((s) => ({ lead: `0${s.step}`, text: s.name, sub: s.detail })),
       },
       links: [{ href: "#fusion-engine", label: "How it decides" }],

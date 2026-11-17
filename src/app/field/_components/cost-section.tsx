@@ -85,8 +85,8 @@ export function CostSection() {
     >
       <div className="grid gap-4 sm:grid-cols-3 lg:gap-5">
         {[
-          { v: usd0(costTotals.nodeAllIn), l: "per sensor node", s: "All-in" },
-          { v: usd0(costTotals.siteAllIn), l: "per camp site", s: "All-in, from the team deck" },
+          { v: usd0(costTotals.nodeAllIn), l: "per prototype RTU", s: "All-in, low-cost kit" },
+          { v: usd0(costTotals.siteAllIn), l: "per valley station", s: "All-in, from the team deck" },
           { v: usd0(costTotals.cloudPerMonth), l: "per month, cloud", s: "Forecast" },
         ].map((t, i) => (
           <Reveal key={t.l} delay={i * 0.05}>
@@ -99,10 +99,10 @@ export function CostSection() {
 
       <div className="mt-8 grid gap-5 lg:grid-cols-2">
         <Reveal>
-          <CostTable title="Sensor node" sub="Select a part for detail." items={costItems.node} allIn={costTotals.nodeAllIn} onPick={select} />
+          <CostTable title="Prototype RTU kit" sub="Low-cost stand-ins. Select a part for detail." items={costItems.node} allIn={costTotals.nodeAllIn} onPick={select} />
         </Reveal>
         <Reveal delay={0.05}>
-          <CostTable title="Camp site" sub="Switch, host, gateway, router." items={costItems.site} allIn={costTotals.siteAllIn} onPick={select} />
+          <CostTable title="Valley station" sub="Switch, host, receiver, router." items={costItems.site} allIn={costTotals.siteAllIn} onPick={select} />
         </Reveal>
       </div>
 

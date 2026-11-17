@@ -39,7 +39,7 @@ const DESTS: Dest[] = [
     icon: ServerCogIcon,
     allow: true,
     tone: broker?.vlan,
-    verdict: `Permitted. The gateway publishes readings to the broker over TLS on TCP ${port} — the one flow the IoT VLAN is allowed.`,
+    verdict: `Permitted. The station receiver publishes readings to the broker over TLS on TCP ${port} — the one flow the IoT VLAN is allowed.`,
   },
   {
     id: "internet",
@@ -190,7 +190,7 @@ export function TrustZones() {
           <span className="mt-2.5 text-[13px] font-semibold leading-tight" style={{ color: iotColor.text }}>
             VLAN {iot.vlan} · {iot.zone}
           </span>
-          <span className="mt-0.5 text-[12px] leading-snug text-muted">{gateway?.label ?? "LoRa gateway"}</span>
+          <span className="mt-0.5 text-[12px] leading-snug text-muted">{gateway?.label ?? "Station receiver"}</span>
           <span className="mt-1 font-mono text-[11px] text-subtle">{iot.subnet}</span>
         </div>
 

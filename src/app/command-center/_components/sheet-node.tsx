@@ -40,12 +40,12 @@ export function NodeSheet({ run, node }: { run: RunResult; node: NodeTrack }) {
       <SheetHeader>
         <div className="flex items-center gap-2.5">
           <SheetTitle>
-            {node.id} · {node.km} km
+            {node.name} · {node.km} km
           </SheetTitle>
           <NodeStatusChip status={status} />
         </div>
         <SheetDescription>
-          River-bank node with ultrasonic level sensor and geophone. LoRa to a ridge relay. Simulated readings.
+          {node.id} on bedrock above the flood line, wired to radar level, pressure and geophone sensors. LoRa {node.booster ? "via a mountain booster" : "straight to the valley station"}, VHF fallback. Simulated readings.
         </SheetDescription>
       </SheetHeader>
       <SheetBody className="flex flex-col gap-6">
@@ -99,7 +99,7 @@ export function NodeSheet({ run, node }: { run: RunResult; node: NodeTrack }) {
             <DetailRow label="Water rising from">
               <TimeStamp clock={clock(s, node.risingFromMin)} tplus={tplus(node.risingFromMin)} />
             </DetailRow>
-            <DetailRow label="Flood reaches the node">
+            <DetailRow label="Flood reaches its sensors">
               <TimeStamp clock={clock(s, node.hitMin)} tplus={tplus(node.hitMin)} />
             </DetailRow>
             <DetailRow label="Engine detects silence">
@@ -117,7 +117,7 @@ export function NodeSheet({ run, node }: { run: RunResult; node: NodeTrack }) {
             </DetailRow>
           </DetailList>
           <p className="mt-2 text-[12px] leading-relaxed text-muted">
-            A node that goes silent after an anomaly is treated as destroyed (rule R4).
+            An RTU whose sensors go silent after an anomaly counts as flood evidence (rule R4).
           </p>
         </section>
 

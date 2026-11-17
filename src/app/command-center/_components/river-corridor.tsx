@@ -50,7 +50,7 @@ export function RiverCorridor({ className }: { className?: string }) {
           style={{ minWidth: CORRIDOR_MIN_W }}
           className="absolute left-0 top-0 block h-full w-full select-none [will-change:transform]"
           role="group"
-          aria-label={`River corridor of the ${s.river}: ${run.nodes.length} sensor nodes, ${run.villages.length} villages and a threshold gauge at ${s.gaugeKm} km.`}
+          aria-label={`River corridor of the ${s.river}: ${run.nodes.length} RTUs, ${run.villages.length} villages and a threshold gauge at ${s.gaugeKm} km.`}
         >
           <FloodLayer geo={geo} run={run} uid={uid} />
           <SourceMarker geo={geo} run={run} />
@@ -98,11 +98,11 @@ function Legend() {
         <svg width="12" height="10" aria-hidden>
           <path d="M6 1 L11 9 H1 Z" className="fill-surface stroke-[var(--subtle)]" strokeWidth="1.3" />
         </svg>
-        Ridge relay
+        Mountain booster
       </span>
       <span className={item}>
         <span className="size-2.5 rounded-full border-2 border-normal-fill bg-surface" aria-hidden />
-        Sensor node
+        RTU
       </span>
       <span className={item}>
         <span className="size-2.5 rounded-full border-2 border-emergency bg-emergency-soft" aria-hidden />
@@ -120,8 +120,8 @@ function Legend() {
         <span className="h-1.5 w-4 rounded-full bg-[var(--flood)]" aria-hidden />
         Flood
       </span>
-      <span className="ml-auto hidden text-subtle md:inline">Click a node or village for details</span>
-      <span className="w-full text-subtle md:hidden">Swipe sideways for the whole valley · tap a node or village for details</span>
+      <span className="ml-auto hidden text-subtle md:inline">Click an RTU or village for details</span>
+      <span className="w-full text-subtle md:hidden">Swipe sideways for the whole valley · tap an RTU or village for details</span>
     </div>
   );
 }
@@ -353,7 +353,7 @@ function SensorNode({ geo, run, index, status, tag }: { geo: CorridorGeo; run: R
         <g
           role="button"
           tabIndex={0}
-          aria-label={`${n.id} at ${n.km} km — ${nodeStatusLabel(status)}. Open details.`}
+          aria-label={`${n.name} (${n.id}) at ${n.km} km — ${nodeStatusLabel(status)}. Open details.`}
           onClick={open}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -363,14 +363,16 @@ function SensorNode({ geo, run, index, status, tag }: { geo: CorridorGeo; run: R
           }}
           className="group cursor-pointer outline-none"
         >
-          {/* ridge relay + LoRa link */}
-          <path
-            d={`M${x} ${yr - 6} L${x + 6.5} ${yr + 5} L${x - 6.5} ${yr + 5} Z`}
-            style={{ fill: "var(--surface)", stroke: "var(--subtle)" }}
-            strokeWidth={1.3}
-            strokeLinejoin="round"
-          />
-          {!silent && (
+          {/* mountain booster + LoRa link (only where a peak blocks the line of sight) */}
+          {n.booster && (
+            <path
+              d={`M${x} ${yr - 6} L${x + 6.5} ${yr + 5} L${x - 6.5} ${yr + 5} Z`}
+              style={{ fill: "var(--surface)", stroke: "var(--subtle)" }}
+              strokeWidth={1.3}
+              strokeLinejoin="round"
+            />
+          )}
+          {n.booster && !silent && (
             <line
               x1={x}
               x2={x}
@@ -431,7 +433,7 @@ function SensorNode({ geo, run, index, status, tag }: { geo: CorridorGeo; run: R
         </g>
       </TooltipTrigger>
       <TooltipContent>
-        {n.id} · {n.km} km · {nodeStatusLabel(status)}
+        {n.name} · {n.km} km · {nodeStatusLabel(status)}
       </TooltipContent>
     </Tooltip>
   );

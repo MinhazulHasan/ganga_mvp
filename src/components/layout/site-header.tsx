@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { nav } from "@/content/site";
 import { GangaWordmark } from "@/components/brand/ganga-mark";
 import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
+import { ModKKbd } from "@/components/ui/mod-k-kbd";
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { ThemeToggle } from "./theme-toggle";
 import { useCommandStore } from "@/lib/stores/command-store";
@@ -68,7 +68,7 @@ export function SiteHeader() {
             <span className="inline-flex items-center gap-2">
               <SearchIcon className="size-3.5" /> Search
             </span>
-            <Kbd>⌘K</Kbd>
+            <ModKKbd />
           </Button>
           <Button variant="ghost" size="icon" className="md:hidden" aria-label="Search" onClick={() => openCommand(true)}>
             <SearchIcon />

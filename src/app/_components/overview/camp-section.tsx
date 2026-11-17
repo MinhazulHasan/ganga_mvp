@@ -81,7 +81,7 @@ export function CampSection() {
       key: "ssh",
       icon: KeyRoundIcon,
       title: "SSH hardening",
-      sub: sshPort ? sshPort.replace("SSH on port", "Port") : asBuilt.hardening,
+      sub: sshPort ? sshPort : asBuilt.hardening,
       detail: {
         ...base,
         title: "SSH hardening",

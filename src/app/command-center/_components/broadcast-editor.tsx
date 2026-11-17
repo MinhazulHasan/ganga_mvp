@@ -106,7 +106,6 @@ function EditorBody() {
           )}
         </div>
         <SheetDescription>Who gets each alert, and how fast. Changes re-run the replay.</SheetDescription>
-        <p className="text-[12px] text-subtle">Broadcast model from Andrrew&apos;s GANGA simulator (USM).</p>
       </SheetHeader>
 
       <SheetBody className="flex flex-col gap-8 pb-8">

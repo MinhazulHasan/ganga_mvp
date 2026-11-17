@@ -21,6 +21,18 @@ export const sources: Record<string, Source> = {
     label: "Watchers / HiRISK — Langtang Lirung rock-ice avalanche",
     url: "https://watchers.news/epicenter/deadly-langtang-rock-ice-avalanche-in-nepal-followed-decades-of-glacier-retreat-and-exceptional-high-altitude-heat/",
   },
+  kathmandupost: {
+    id: "kathmandupost",
+    label: "The Kathmandu Post, 2 Sep 2026 — Nepal sent its disaster alert 38 minutes after the glacier collapse",
+    url: "https://kathmandupost.com/national/2026/09/02/nepal-sent-its-disaster-alert-38-minutes-after-the-glacier-collapse-it-wasn-t-enough",
+    note: "NDRRMA spokesperson: text alerts at 09:15. One resident's phone showed it at 09:42.",
+  },
+  wikipedia2026: {
+    id: "wikipedia2026",
+    label: "2026 Nepal floods (Wikipedia) — Nepali officials, as of 5 Oct 2026",
+    url: "https://en.wikipedia.org/wiki/2026_Nepal_floods",
+    note: "Secondary source. Check the NDRRMA figure before presenting.",
+  },
   deck: {
     id: "deck",
     label: "Team PASS camp deck (citing Idaho State University, 1 Oct 2026)",
@@ -63,14 +75,14 @@ export const event = {
     {
       label: "First SMS",
       value: "+38 min",
-      detail: "First SMS went out 38 minutes after the collapse. Upstream stations were swept away.",
-      source: "deck",
+      detail: "NDRRMA's first text alert went out at 09:15, 38 minutes after the 08:37 collapse. The Syabrubesi river gauge was swept away at 08:50.",
+      source: "kathmandupost",
     },
     {
       label: "Lives lost",
-      value: "1,400+",
-      detail: "Early reports on 27 August counted at least 389 dead in Nepal and over 1,500 missing.",
-      source: "deck",
+      value: "1,455",
+      detail: "Dead in Nepal as of 5 October 2026, when formal search and rescue ended. 5,285 more were still missing.",
+      source: "wikipedia2026",
     },
   ],
   monitoringGap: "No operational glacier-hazard warning system covered the failure site.",

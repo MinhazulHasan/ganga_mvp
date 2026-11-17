@@ -130,8 +130,7 @@ export function DeliverySheet({ run, d }: { run: RunResult; d: Delivery }) {
         )}
         <p className="text-[12px] leading-relaxed text-subtle">
           Send time = state change + {run.options.procDelayS} s engine processing
-          {dispatchS ? ` + ${dispatchS} s dispatch delay for this group` : ""}. Latency from the broadcast settings (team defaults come from Andrrew&apos;s
-          GANGA simulator).
+          {dispatchS ? ` + ${dispatchS} s dispatch delay for this group` : ""}. Latency from the broadcast settings.
         </p>
         <Button variant="outline" size="sm" className="self-start" onClick={openBroadcast}>
           <MegaphoneIcon /> Edit broadcast settings
@@ -189,8 +188,7 @@ export function DeviceSheet({ id, run }: { id: string; run: RunResult }) {
         )}
         {dv.id === "aws" && (
           <p className="text-[12.5px] leading-relaxed text-muted">
-            The cloud dashboard mirrors the edge. After 15 s without data it shows STALE, not an all-clear. The edge keeps alerting. Rule from
-            Andrrew&apos;s GANGA simulator.
+            The cloud dashboard mirrors the edge. After 15 s without data it shows STALE, not an all-clear. The edge keeps alerting.
           </p>
         )}
         <p className="text-[12.5px] leading-relaxed text-muted">

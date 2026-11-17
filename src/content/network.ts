@@ -109,5 +109,5 @@ export const asBuilt = {
     nat: { name: "g1-nat (MikroTik)", detail: "ether1 .138/29 · NAT + OSPF v2/v3 · ether2 192.168.1.1/24" },
     lan: { name: "NAT LAN 192.168.1.0/24", detail: "Group switch → Wi-Fi AP + laptops · DHCP .100–.200" },
   },
-  hardening: "SSH on port 43322 · only VLAN 1020 may manage the servers",
+  hardening: "Non-default SSH port · only VLAN 1020 may manage the servers",
 } as const;

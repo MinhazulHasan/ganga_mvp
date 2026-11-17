@@ -6,6 +6,7 @@ import { SimulationPill } from "@/components/brand/provenance";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
+import { ModKKbd } from "@/components/ui/mod-k-kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useRun } from "./sim-store";
@@ -79,9 +80,6 @@ function TitleRow() {
             <WhatIfBadge />
             <CustomBroadcastBadge />
           </div>
-          <p className="mt-2.5 text-[12.5px] leading-relaxed text-subtle">
-            Built on Andrrew&apos;s GANGA simulator (USM).
-          </p>
         </div>
         {/* holds its line; the scenario badges on the left wrap instead */}
         <div className="flex flex-wrap items-center gap-3 md:shrink-0 md:flex-nowrap">
@@ -97,7 +95,7 @@ function TitleRow() {
               <Kbd>W</Kbd> WAN
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <Kbd>⌘K</Kbd> actions
+              <ModKKbd /> actions
             </span>
           </div>
           <Button variant="outline" size="sm" onClick={() => select({ kind: "assumptions" })}>

@@ -47,7 +47,6 @@ const lanLeaves = lanEdge.split("+").map((s) => s.trim()).filter(Boolean); // ["
 const svGw = expandShortIp(sv.gateway, sv.subnet);
 const cvGw = expandShortIp(cv.gateway, cv.subnet);
 const gwPort = (g: string) => g.match(/\(([^)]+)\)/)?.[1] ?? "";
-const sshPort = asBuilt.hardening.match(/port\s+(\d+)/i)?.[1];
 
 function subnetRows(cidr: string): Row[] {
   const i = cidrInfo(cidr);
@@ -319,7 +318,7 @@ export function AsBuilt() {
             <div className="mt-3 flex items-start gap-3 rounded-[16px] border border-built/25 bg-built-soft/60 px-4 py-3.5">
               <LockKeyholeIcon className="mt-0.5 size-4 shrink-0 text-built" aria-hidden />
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold">Hardening{sshPort ? ` · SSH on ${sshPort}` : ""}</p>
+                <p className="text-[13px] font-semibold">Hardening</p>
                 <p className="mt-0.5 font-mono text-[12px] leading-relaxed text-muted">{asBuilt.hardening}</p>
               </div>
             </div>

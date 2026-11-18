@@ -1,4 +1,4 @@
-import { ptDevices, ptLinks, vlanPlan, iosLog, type PtDevice } from "@/content/network";
+import { ptDevices, ptLinks, vlanPlan, iosLog, type PtDevice, type Uplink } from "@/content/network";
 
 /* ------------------------------------------------------------------
    IPv4 helpers — all addresses shown on the page are derived from
@@ -77,7 +77,14 @@ export function sviFor(vlan: number): string | null {
 export function linksFor(id: string) {
   return ptLinks
     .filter((l) => l.from === id || l.to === id)
-    .map((l) => ({ label: l.label, wan: "wan" in l && l.wan === true, peer: deviceById(l.from === id ? l.to : l.from) as PtDevice }));
+    .map((l) => ({ label: l.label, wan: l.wan, peer: deviceById(l.from === id ? l.to : l.from) as PtDevice }));
+}
+
+/** A link is on the live path when its lane is the router the default route points at. */
+export function linkState(l: { wan?: Uplink; lane?: Uplink }, down: Record<Uplink, boolean>, route: Uplink | null) {
+  if (l.wan && down[l.wan]) return "down" as const;
+  if (!l.lane) return "access" as const;
+  return l.lane === route ? ("active" as const) : ("standby" as const);
 }
 
 /** "HTTPS + DNS from operators; MQTT; out to the cloud" → rules with allow/deny. */

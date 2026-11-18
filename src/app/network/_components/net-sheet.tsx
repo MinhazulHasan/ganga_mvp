@@ -16,7 +16,7 @@ import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTit
 import { Provenance } from "@/components/brand/provenance";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ipv6, routingNote, type PtDevice } from "@/content/network";
+import { ipv6, routingNote, uplinks, type PtDevice } from "@/content/network";
 import { members } from "@/content/team";
 import { useNetworkState } from "./network-state";
 import { VlanChip, VlanDot, vlanColor, vlanSurface } from "./vlan-tone";
@@ -47,12 +47,12 @@ export type NetSheetApi = ReturnType<typeof useNetSheet>;
 
 const designer = members.find((m) => m.id === "swarnima")?.name ?? "Swarnima Khadka";
 
-export function NetSheet({ api }: { api: NetSheetApi }) {
+export function NetSheet({ api, configs = {} }: { api: NetSheetApi; configs?: Record<string, string> }) {
   const view = api.stack[api.stack.length - 1];
   return (
     <Sheet open={api.isOpen} onOpenChange={(o) => !o && api.close()}>
       <SheetContent>
-        {view?.kind === "device" && <DeviceView id={view.id} api={api} />}
+        {view?.kind === "device" && <DeviceView id={view.id} api={api} configs={configs} />}
         {view?.kind === "vlan" && <VlanView vlan={view.vlan} api={api} />}
         {!view && (
           <>
@@ -203,13 +203,61 @@ function IconTile({ device, unreachable }: { device: PtDevice; unreachable?: boo
   );
 }
 
+function ConfigBlock({ name, text }: { name: string; text: string }) {
+  const [done, setDone] = React.useState(false);
+  React.useEffect(() => {
+    if (!done) return;
+    const t = setTimeout(() => setDone(false), 1400);
+    return () => clearTimeout(t);
+  }, [done]);
+  const lines = text.split("\n").length;
+  return (
+    <>
+      <GroupLabel>Config · from the Packet Tracer file</GroupLabel>
+      <div className="overflow-hidden rounded-[16px] bg-[var(--net-term-bg)] text-[#f8f8f2] ring-1 ring-black/5 dark:ring-white/[0.06]">
+        <div className="flex h-9 items-center justify-between gap-3 border-b border-white/[0.07] bg-[var(--net-term-bar)] pl-3.5 pr-1.5">
+          <span className="truncate font-mono text-[11.5px] text-white/60">
+            network/configs/{name}.txt · {lines} lines
+          </span>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(text);
+                setDone(true);
+                toast.success(`${name} config copied`, { description: `${lines} lines` });
+              } catch {
+                toast("Couldn't copy", { description: "Your browser blocked clipboard access." });
+              }
+            }}
+            className="inline-flex h-7 items-center gap-1.5 rounded-[8px] px-2 text-[11.5px] font-medium text-white/60 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/40"
+          >
+            {done ? <CheckIcon className="size-3.5 text-[#50fa7b]" aria-hidden /> : <CopyIcon className="size-3.5" aria-hidden />}
+            {done ? "Copied" : "Copy"}
+          </button>
+        </div>
+        <pre className="max-h-[360px] overflow-auto px-3.5 py-3 font-mono text-[11.5px] leading-[1.65] [scrollbar-color:rgb(255_255_255/0.18)_transparent] [scrollbar-width:thin]">
+          {text.split("\n").map((l, i) => (
+            <span key={i} className={cn("block whitespace-pre", l.trimStart().startsWith("!") && "italic text-[#6272a4]")}>
+              {l || " "}
+            </span>
+          ))}
+        </pre>
+      </div>
+    </>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 
-function DeviceView({ id, api }: { id: string; api: NetSheetApi }) {
-  const { wanDown } = useNetworkState();
+function DeviceView({ id, api, configs }: { id: string; api: NetSheetApi; configs: Record<string, string> }) {
+  const { down, route, offline } = useNetworkState();
   const d = deviceById(id);
   if (!d) return <SheetTitle className="sr-only">Unknown device</SheetTitle>;
-  const unreachable = d.kind === "cloud" && wanDown;
+  const unreachable = d.kind === "cloud" && offline;
+  const config = d.config ? configs[d.config] : undefined;
+  const isRouter = d.kind === "router" && !!d.uplink;
+  const rStatus = isRouter ? (down[d.uplink!] ? "down" : route === d.uplink ? "active" : "standby") : null;
   const vlan = d.vlan ? vlanById(d.vlan) : undefined;
   const subnet = vlan ? cidrInfo(vlan.subnet) : null;
   const svi = d.vlan ? sviFor(d.vlan) : null;
@@ -229,17 +277,34 @@ function DeviceView({ id, api }: { id: string; api: NetSheetApi }) {
         <div className="mt-2 flex flex-wrap gap-1.5">
           {d.vlan && <VlanChip vlan={d.vlan} size="sm" />}
           {d.kind === "cloud" &&
-            (unreachable ? (
+            (unreachable || !route ? (
               <Badge variant="emergency" size="sm">
                 <TriangleAlertIcon aria-hidden />
-                Unreachable · Gi0/1 down
+                Unreachable · both uplinks down
               </Badge>
             ) : (
               <Badge variant="normal" size="sm">
                 <CheckIcon aria-hidden />
-                Reachable via Gi0/1
+                Reachable via {uplinks[route].router} ({uplinks[route].medium})
               </Badge>
             ))}
+          {rStatus === "active" && (
+            <Badge variant="normal" size="sm">
+              <CheckIcon aria-hidden />
+              Active · carries the default route
+            </Badge>
+          )}
+          {rStatus === "standby" && (
+            <Badge variant="planned" size="sm">
+              Standby · cost {uplinks[d.uplink!].cost}
+            </Badge>
+          )}
+          {rStatus === "down" && (
+            <Badge variant="emergency" size="sm">
+              <TriangleAlertIcon aria-hidden />
+              Gi0/1 administratively down
+            </Badge>
+          )}
           {mode.toConfirm && (
             <Badge variant="planned" size="sm">
               IP to confirm
@@ -253,8 +318,13 @@ function DeviceView({ id, api }: { id: string; api: NetSheetApi }) {
         <Group>
           <Row label="Role">{d.role}</Row>
           <Row label="Packet Tracer model">{d.model}</Row>
+          {d.port && (
+            <Row label="Switch port" mono>
+              GANGA-SW {d.port}
+            </Row>
+          )}
           {d.standIn && (
-            <Row label="Stand-in for">
+            <Row label={d.uplink === "r2" ? "In the field" : "Stand-in for"}>
               <span className="inline-flex items-center gap-1.5">
                 <ArrowLeftRightIcon className="size-3.5 text-subtle" aria-hidden />
                 {d.standIn}
@@ -265,9 +335,11 @@ function DeviceView({ id, api }: { id: string; api: NetSheetApi }) {
 
         <GroupLabel>Addressing</GroupLabel>
         <Group>
-          <Row label="As configured" mono copy={d.addressing}>
-            {d.addressing}
-          </Row>
+          {!isRouter && (
+            <Row label="As configured" mono copy={d.addressing}>
+              {d.addressing}
+            </Row>
+          )}
           {vlan && subnet && (
             <>
               <Row label="Subnet" mono>
@@ -304,13 +376,27 @@ function DeviceView({ id, api }: { id: string; api: NetSheetApi }) {
                 </Row>
               );
             })}
-          {d.kind === "router" && (
+          {isRouter && (
             <>
+              {d.ports?.map((p) => (
+                <Row key={p.name} label={`${p.name} → ${p.peer}`} mono>
+                  {p.ip}
+                </Row>
+              ))}
               <Row label="OSPF neighbour" mono>
-                {ospf.neighbour} on {ospf.iface} · {ospf.state}
+                {ospf.neighbour} on Gi0/0 · {ospf.state}
               </Row>
-              <Row label="Gi0/1 (WAN)">
-                {wanDown ? <span className="text-emergency">Administratively down</span> : <span className="text-normal">Up</span>}
+              <Row label={`Gi0/1 (${uplinks[d.uplink!].medium})`}>
+                {down[d.uplink!] ? <span className="text-emergency">Administratively down</span> : <span className="text-normal">Up</span>}
+              </Row>
+              <Row label="Default route">
+                {rStatus === "down" ? (
+                  <span className="text-emergency">Withdrawn</span>
+                ) : rStatus === "active" ? (
+                  <span className="text-normal">Advertised · in use</span>
+                ) : (
+                  <span className="text-muted">Advertised · standby</span>
+                )}
               </Row>
             </>
           )}
@@ -321,13 +407,13 @@ function DeviceView({ id, api }: { id: string; api: NetSheetApi }) {
             <GroupLabel>Links</GroupLabel>
             <Group>
               {links.map((l) => {
-                const down = l.wan && wanDown;
+                const linkDown = !!l.wan && down[l.wan];
                 return (
                   <NavRow
                     key={`${l.label}-${l.peer.id}`}
                     onClick={() => api.push({ kind: "device", id: l.peer.id })}
                     trailing={
-                      down ? (
+                      linkDown ? (
                         <Badge variant="emergency" size="sm">
                           down
                         </Badge>
@@ -335,13 +421,17 @@ function DeviceView({ id, api }: { id: string; api: NetSheetApi }) {
                     }
                   >
                     <span className="block text-[13.5px] font-medium">{l.peer.label}</span>
-                    <span className={cn("block font-mono text-[12px]", down ? "text-emergency" : "text-muted")}>{l.label}</span>
+                    <span className={cn("block font-mono text-[12px]", linkDown ? "text-emergency" : "text-muted")}>{l.label || "Link"}</span>
                   </NavRow>
                 );
               })}
             </Group>
           </>
         )}
+
+        {d.note && <p className="mt-3 px-1 text-[12.5px] leading-relaxed text-muted">{d.note}</p>}
+
+        {config && <ConfigBlock name={d.config!} text={config} />}
 
         {vlan && (
           <>

@@ -80,12 +80,12 @@ export function HowSection({ facts }: { facts: OverviewFacts }) {
     },
     wan: {
       eyebrow: "Edge → cloud link",
-      title: "WAN uplink",
-      description: "Camp network link to the internet. The alert decision does not depend on it.",
+      title: "WAN uplinks",
+      description: "Cellular first, satellite as backup. The alert decision depends on neither.",
       provenance: "simulated",
       rows: [{ label: "Channels that need it", value: wanChannels.join(" · ") }],
       list: {
-        title: "WAN cut in Cisco Packet Tracer",
+        title: "Both uplinks cut in Cisco Packet Tracer",
         items: iosLog.cut.map((line) => ({ text: line })),
       },
       note: iosLog.ospfNote,

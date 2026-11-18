@@ -130,7 +130,7 @@ export function cutWan(opts: { at?: number; silent?: boolean } = {}) {
   if (opts.silent) return;
   toast(`WAN cut at ${clockAt(getScenario(get().scenarioId), at)}`, {
     id: "cc-wan",
-    description: "GigabitEthernet0/1 down. Siren and local SMS still work.",
+    description: "Cellular and satellite both down. Siren and local SMS still work.",
   });
 }
 

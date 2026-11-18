@@ -13,13 +13,14 @@ import {
   RouteIcon,
   RouterIcon,
   ServerIcon,
+  SatelliteDishIcon,
   SunIcon,
   type LucideIcon,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Provenance } from "@/components/brand/provenance";
 import { cn } from "@/lib/utils";
-import { asBuilt, ipv6, routingNote, vlanPlan } from "@/content/network";
+import { asBuilt, failover, ipv6, nextSteps, routingNote, vlanPlan } from "@/content/network";
 import { resilience } from "@/content/architecture";
 import { Rise } from "./rise";
 import { sviFor } from "./net-utils";
@@ -32,13 +33,14 @@ export function HeaderChips() {
   const chips: { href: string; icon: LucideIcon; label: string; planned?: boolean }[] = [
     { href: "#addressing", icon: LayersIcon, label: `VLANs ${vlanPlan.map((v) => v.vlan).join("/")}` },
     { href: "#topology", icon: RouteIcon, label: "OSPF area 0" },
+    { href: "#topology", icon: SatelliteDishIcon, label: "Cellular + satellite" },
     { href: "#ipv6", icon: GlobeIcon, label: "Dual-stack ready", planned: ipv6.provenance === "planned" },
     { href: "#as-built", icon: ServerIcon, label: "BIND9 primary + secondary" },
   ];
   return (
     <ul className="flex flex-wrap items-center gap-2">
       {chips.map(({ href, icon: Icon, label, planned }) => (
-        <li key={href}>
+        <li key={label}>
           <a
             href={href}
             title={planned ? "Planned — see the IPv6 section" : undefined}
@@ -69,10 +71,11 @@ export function RoutingCard() {
         <span className="inline-flex size-9 items-center justify-center rounded-[11px] bg-primary/[0.07] text-primary dark:bg-primary/15">
           <RouteIcon className="size-[18px]" aria-hidden />
         </span>
-        <Provenance kind="simulated" label="Packet Tracer" tip="OSPF process 1, area 0, runs between GANGA-R1 and GANGA_SW in the Packet Tracer model." />
+        <Provenance kind="simulated" label="Packet Tracer" tip="OSPF process 1, area 0, runs between GANGA-R1, GANGA-R2 and GANGA-SW in the Packet Tracer model." />
       </div>
       <h3 className="mt-4 text-[17px] font-semibold tracking-[-0.02em]">Routing · OSPF area 0</h3>
       <p className="mt-2 text-[15px] leading-relaxed text-muted">{routingNote}</p>
+      <p className="mt-2 text-[15px] leading-relaxed text-muted">{failover.how}</p>
     </Card>
   );
 }
@@ -231,7 +234,7 @@ export function Ipv6Section() {
 const RES_META: Record<string, { icon: LucideIcon; href: string; cta: string }> = {
   "Encrypted telemetry": { icon: LockKeyholeIcon, href: "#trust-zones", cta: "See the trust zones" },
   "Segmented network": { icon: LayersIcon, href: "#addressing", cta: "See the VLAN plan" },
-  "Edge-first decisions": { icon: CpuIcon, href: "#topology", cta: "Run the WAN test" },
+  "Edge-first decisions": { icon: CpuIcon, href: "#topology", cta: "Run the failover test" },
   "Silence is a signal": { icon: HeartPulseIcon, href: "/architecture", cta: "How the engine reads silence" },
   "Redundant naming": { icon: ServerIcon, href: "#as-built", cta: "See the DNS we built" },
   "Off-grid by design": { icon: SunIcon, href: "/field", cta: "Power and field kit" },
@@ -283,3 +286,33 @@ export function ResilienceGrid() {
   );
 }
 
+
+/* ------------------------------------------------------------------
+   Not redundant yet — honest list from Swarnima's recording
+------------------------------------------------------------------- */
+export function NextSteps() {
+  return (
+    <Card className="mt-6 p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-[17px] font-semibold tracking-[-0.02em]">Not done yet</h3>
+          <p className="mt-1 text-[15px] leading-relaxed text-muted">What the Packet Tracer model does not cover. We list it so nobody has to ask.</p>
+        </div>
+        <Provenance kind={failover.gapProvenance} />
+      </div>
+      <ol className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {nextSteps.map((n, i) => (
+          <li key={n.title} className="flex gap-3 rounded-[16px] border border-dashed border-border-strong bg-planned-soft/50 p-4">
+            <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-surface font-mono text-[12px] font-semibold text-planned ring-1 ring-border">
+              {i + 1}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[14.5px] font-semibold tracking-[-0.01em]">{n.title}</span>
+              <span className="mt-1 block text-[13.5px] leading-relaxed text-muted">{n.detail}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </Card>
+  );
+}

@@ -6,7 +6,9 @@ import {
   NetworkIcon,
   RadioTowerIcon,
   RouterIcon,
+  SatelliteDishIcon,
   ServerCogIcon,
+  SignalIcon,
   ServerIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -23,6 +25,8 @@ export const DEVICE_ICON = {
   pc: MonitorIcon,
   admin: MonitorCogIcon,
   gateway: RadioTowerIcon,
+  cellular: SignalIcon,
+  satellite: SatelliteDishIcon,
 } satisfies Record<string, LucideIcon>;
 type DeviceIconKey = keyof typeof DEVICE_ICON;
 
@@ -31,6 +35,7 @@ export function deviceIconKey(d: PtDevice, opts?: { unreachable?: boolean }): De
   if (d.id === "admin") return "admin";
   if (d.id === "gw") return "gateway";
   if (d.id === "broker") return "broker";
+  if (d.kind === "carrier") return d.uplink === "r2" ? "satellite" : "cellular";
   return d.kind;
 }
 
@@ -40,6 +45,7 @@ export const KIND_LABEL: Record<PtDevice["kind"], string> = {
   cloud: "Cloud",
   server: "Server",
   pc: "PC",
+  carrier: "ISP router",
 };
 
 /** "10.0.20.0/24 · static (IP to confirm)" → { mode: "static", toConfirm: true } */

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { ArrowDownIcon } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Section } from "@/components/layout/section";
@@ -10,17 +12,33 @@ import { Topology } from "./_components/topology/topology";
 import { VlanPlan } from "./_components/vlan-plan";
 import { TrustZones } from "./_components/trust-zones";
 import { AsBuilt } from "./_components/as-built";
-import { AddressRuleCard, HeaderChips, Ipv6Section, ResilienceGrid, RoutingCard } from "./_components/sections";
+import { AddressRuleCard, HeaderChips, Ipv6Section, NextSteps, ResilienceGrid, RoutingCard } from "./_components/sections";
+import { PtRecording } from "./_components/pt-recording";
 import { computeWanOutcome } from "./_components/wan-outcome";
 
 export const metadata: Metadata = {
   title: "Network",
   description:
-    "GANGA edge network: four VLANs, OSPF area 0, WAN failover test, IPv6 plan and the APIE Camp #11 build.",
+    "GANGA edge network: four VLANs, OSPF area 0, cellular + satellite failover test, IPv6 plan and the APIE Camp #11 build.",
 };
+
+/** Swarnima's router and switch configs, read from network/configs at build time (one source of truth). */
+function readConfigs(): Record<string, string> {
+  const dir = path.join(process.cwd(), "network", "configs");
+  try {
+    return Object.fromEntries(
+      readdirSync(dir)
+        .filter((f) => f.endsWith(".txt"))
+        .map((f) => [f.replace(/\.txt$/, ""), readFileSync(path.join(dir, f), "utf8").replace(/\r\n/g, "\n").trimEnd()])
+    );
+  } catch {
+    return {};
+  }
+}
 
 export default function NetworkPage() {
   const outcome = computeWanOutcome();
+  const configs = readConfigs();
 
   return (
     <NetworkStateProvider>
@@ -39,7 +57,7 @@ export default function NetworkPage() {
           <>
             <Button asChild size="lg">
               <a href="#topology">
-                Run the WAN test
+                Run the failover test
                 <ArrowDownIcon />
               </a>
             </Button>
@@ -54,10 +72,15 @@ export default function NetworkPage() {
       <Section
         id="topology"
         eyebrow="Edge topology"
-        title="WAN cut test"
+        title="Failover test"
       >
         <Rise>
-          <Topology outcome={outcome} />
+          <Topology outcome={outcome} configs={configs} />
+        </Rise>
+        <Rise className="mt-6">
+          <div id="pt-recording" className="scroll-mt-24">
+            <PtRecording configCount={Object.keys(configs).length} />
+          </div>
         </Rise>
       </Section>
 
@@ -112,6 +135,9 @@ export default function NetworkPage() {
         title="Resilience"
       >
         <ResilienceGrid />
+        <Rise>
+          <NextSteps />
+        </Rise>
       </Section>
     </NetworkStateProvider>
   );

@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowRightIcon, CircleCheckIcon, CloudOffIcon } from "lucide-react";
+import { ArrowRightIcon, CircleCheckIcon, CloudIcon, CloudOffIcon } from "lucide-react";
 import { Provenance } from "@/components/brand/provenance";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { uplinks } from "@/content/network";
 import { useNetworkState } from "../network-state";
 import type { WanOutcome } from "../wan-outcome";
 
@@ -13,7 +14,15 @@ const joinNames = (names: string[]) =>
   names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 
 export function WanCallout({ outcome, className }: { outcome: WanOutcome; className?: string }) {
-  const { wanDown } = useNetworkState();
+  const { down, route, offline: wanDown } = useNetworkState();
+  const onSat = route === "r2";
+  const headline = wanDown
+    ? "Both uplinks are down"
+    : onSat
+      ? "Cellular down · satellite took over"
+      : down.r2
+        ? "Satellite down · cellular carries all"
+        : "If both uplinks go down";
 
   return (
     <div className={cn("flex flex-col rounded-[18px] bg-surface-2 p-5 hairline", className)}>
@@ -22,15 +31,15 @@ export function WanCallout({ outcome, className }: { outcome: WanOutcome; classN
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-subtle">Alert delivery</p>
           <p className="mt-1 flex items-center gap-2 text-[15px] font-semibold tracking-[-0.01em]">
             <span
-              className={cn("size-2 rounded-full transition-colors duration-300", wanDown ? "bg-emergency-fill" : "bg-normal-fill")}
+              className={cn("size-2 rounded-full transition-colors duration-300", wanDown ? "bg-emergency-fill" : onSat || down.r2 ? "bg-watch" : "bg-normal-fill")}
               aria-hidden
             />
-            {wanDown ? "Gi0/1 is down" : "If Gi0/1 goes down"}
+            {headline}
           </p>
         </div>
         <Provenance
           kind="simulated"
-          tip={`From the GANGA broadcast model, replayed on ${outcome.scenario} with the WAN down from the start.`}
+          tip={`From the GANGA broadcast model, replayed on ${outcome.scenario} with both uplinks down from the start.`}
         />
       </div>
 
@@ -57,28 +66,30 @@ export function WanCallout({ outcome, className }: { outcome: WanOutcome; classN
             ))}
           </ul>
           {outcome.sameAsUp && (
-            <p className="mt-2 text-[12.5px] leading-relaxed text-muted">Residents are warned as early as with the WAN up.</p>
+            <p className="mt-2 text-[12.5px] leading-relaxed text-muted">Residents are warned as early as with the internet up.</p>
           )}
         </div>
 
         <div>
-          <p className={cn("flex items-center gap-1.5 text-[13px] font-semibold transition-colors", wanDown ? "text-emergency" : "text-muted")}>
-            <CloudOffIcon className="size-4" aria-hidden />
-            Needs the WAN
+          <p className={cn("flex items-center gap-1.5 text-[13px] font-semibold transition-colors", wanDown ? "text-emergency" : onSat ? "text-watch" : "text-muted")}>
+            {wanDown ? <CloudOffIcon className="size-4" aria-hidden /> : <CloudIcon className="size-4" aria-hidden />}
+            Needs an uplink
           </p>
           <ul className="mt-2.5 space-y-1.5">
             {outcome.cloud.map((c) => (
               <li key={c.id} className="flex items-baseline justify-between gap-3 text-[13px]">
                 <span className={cn("transition-colors duration-300", wanDown && "text-muted line-through decoration-emergency/60")}>{c.name}</span>
-                <span className={cn("shrink-0 font-mono text-[11.5px] tabular", wanDown ? "text-emergency" : "text-muted")}>
-                  {wanDown ? "blocked" : `≈${c.latencyS} s`}
+                <span className={cn("shrink-0 font-mono text-[11.5px] tabular", wanDown ? "text-emergency" : onSat ? "text-watch" : "text-muted")}>
+                  {wanDown ? "blocked" : onSat ? "via satellite" : `≈${c.latencyS} s`}
                 </span>
               </li>
             ))}
           </ul>
           {outcome.cutOff.length > 0 && (
             <p className="mt-3 text-[12.5px] leading-relaxed text-muted">
-              {joinNames(outcome.cutOff)} {outcome.cutOff.length > 1 ? "get" : "gets"} nothing until the WAN is back.
+              {onSat
+                ? `Delivered over ${uplinks.r2.router} for now. If satellite fails too, ${joinNames(outcome.cutOff)} ${outcome.cutOff.length > 1 ? "get" : "gets"} nothing until an uplink is back.`
+                : `${joinNames(outcome.cutOff)} ${outcome.cutOff.length > 1 ? "get" : "gets"} nothing until an uplink is back.`}
             </p>
           )}
         </div>

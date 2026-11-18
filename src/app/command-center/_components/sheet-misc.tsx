@@ -163,7 +163,7 @@ export function DeviceSheet({ id, run }: { id: string; run: RunResult }) {
           {dv.standIn && <DetailRow label="In the field">{dv.standIn}</DetailRow>}
           {(dv.id === "r1" || dv.id === "aws") && (
             <DetailRow label="WAN now">
-              <span className={wanDown ? "font-medium text-emergency" : "text-normal"}>{wanDown ? "Down (Gi0/1 shut)" : "Up"}</span>
+              <span className={wanDown ? "font-medium text-emergency" : "text-normal"}>{wanDown ? "Down (both uplinks shut)" : "Up · cellular, satellite on standby"}</span>
             </DetailRow>
           )}
           {dv.id === "aws" && (

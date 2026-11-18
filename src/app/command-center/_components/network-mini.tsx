@@ -36,7 +36,7 @@ export function NetworkMini({ className }: { className?: string }) {
   const leafXs = [14 + leafW / 2, cx, W - 14 - leafW / 2];
   const chips: ChipSpec[] = [
     { id: "aws", label: device("aws")?.label ?? "AWS / Internet", sub: cloudSub, icon: CloudIcon, x: cx, y: 22, w: 140, h: 32 },
-    { id: "r1", label: device("r1")?.label ?? "GANGA-R1", sub: device("r1")?.model ?? "", icon: RouterIcon, x: cx, y: 102, w: 136, h: 34 },
+    { id: "r1", label: "GANGA-R1 + R2", sub: "cell + satellite", icon: RouterIcon, x: cx, y: 102, w: 136, h: 34 },
     { id: "sw", label: device("sw")?.label ?? "GANGA_SW", sub: "Layer-3 switch", icon: NetworkIcon, x: cx, y: 160, w: 136, h: 34 },
     { id: "broker", label: "Broker/engine", sub: "VLAN 20", icon: ServerIcon, x: leafXs[0], y: 224, w: leafW, h: 38 },
     { id: "gw", label: "Receiver", sub: "VLAN 30", icon: RadioTowerIcon, x: leafXs[1], y: 224, w: leafW, h: 38 },
@@ -83,12 +83,12 @@ export function NetworkMini({ className }: { className?: string }) {
                     strokeLinecap="round"
                   />
                   <text x={cx + 14} y={wanMidY + 3.5} className="fill-emergency text-[10px] font-semibold">
-                    Gi0/1 down
+                    both uplinks down
                   </text>
                 </g>
               ) : (
                 <text x={cx + 8} y={wanMidY + 3.5} className="fill-subtle font-mono text-[9.5px]">
-                  Gi0/1 · WAN
+                  2 × WAN
                 </text>
               )}
 
@@ -248,15 +248,15 @@ function Terminal({ log, wanDown, scenarioClock }: { log: WanEvent[]; wanDown: b
             <span className="size-2 rounded-full bg-white/15" />
             <span className="size-2 rounded-full bg-white/15" />
           </span>
-          GANGA-R1 · console
+          GANGA-R1 + R2 · console
         </span>
-        <span className={wanDown ? "text-[#ff6e6e]" : "text-[#50fa7b]"}>{wanDown ? "Gi0/1 down" : "Gi0/1 up"}</span>
+        <span className={wanDown ? "text-[#ff6e6e]" : "text-[#50fa7b]"}>{wanDown ? "WAN down" : "WAN up"}</span>
       </div>
       <div ref={ref} className="min-h-0 flex-1 overflow-y-auto px-3 py-2.5" aria-live="polite">
         {log.length === 0 ? (
           <p className="text-[#8b8fb8]">
-            <span className="text-[#50fa7b]">GANGA-R1#</span> Router up, WAN on Gi0/1. Cut the WAN (switch or <span className="text-[#f8f8f2]">W</span>) to see the
-            interface go down.
+            <span className="text-[#50fa7b]">GANGA-R1#</span> Cellular up on R1, satellite on standby on R2. Cut the WAN (switch or{" "}
+            <span className="text-[#f8f8f2]">W</span>) to take both uplinks down.
           </p>
         ) : (
           log.map((ev) => (

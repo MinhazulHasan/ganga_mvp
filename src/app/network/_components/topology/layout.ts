@@ -1,9 +1,10 @@
 import type { Edge, Node } from "@xyflow/react";
-import { ptDevices, ptLinks, vlanPlan, type PtDevice } from "@/content/network";
+import { ptDevices, ptLinks, vlanPlan, type PtDevice, type Uplink } from "@/content/network";
 
-/* Geometry in flow units (≈ px at zoom 1). Hosts sit in VLAN zones along the bottom;
-   the cloud → router → switch chain runs along the top, right-aligned so the switch's
-   downlink drops straight onto the last VLAN. */
+/* Geometry in flow units (≈ px at zoom 1).
+   Two WAN lanes run left → right along the top: Internet/AWS → carrier → router → switch.
+   Cellular (R1) is the upper lane, satellite (R2) the lower one. The switch sits between
+   the lanes on the right and drops onto the VLAN zones along the bottom. */
 export const G = {
   hostW: 200,
   hostH: 128,
@@ -11,23 +12,37 @@ export const G = {
   zonePad: 10,
   zoneLabelH: 42,
   zoneGap: 16,
-  zoneTop: 292,
-  cloudW: 220,
-  routerW: 280,
-  switchW: 280,
+  zoneTop: 462,
+  laneY: [0, 196] as const,
+  cloudW: 188,
+  carrierW: 156,
+  routerW: 236,
+  switchW: 268,
+  /** y of the left/right handles on lane cards */
   chainHandleY: 32,
+  /** y of the two handles on the cloud (out) and the switch (in), relative to the card */
+  pairHandleY: [20, 52] as const,
 } as const;
 
-export type DeviceNodeData = { device: PtDevice; variant: "chain" | "host"; width: number; downlinkX?: number };
+const COL = {
+  cloud: 0,
+  carrier: G.cloudW + 96,
+  router: G.cloudW + 96 + G.carrierW + 112,
+  switch: G.cloudW + 96 + G.carrierW + 112 + G.routerW + 132,
+};
+/** cloud and switch sit between the lanes, so their handle pair is centred on the two lane lines */
+const MID_Y = (G.laneY[0] + G.laneY[1]) / 2 + G.chainHandleY - (G.pairHandleY[0] + G.pairHandleY[1]) / 2;
+
+export type DeviceNodeData = { device: PtDevice; variant: "chain" | "compact" | "host"; width: number; downlinkX?: number };
 export type ZoneNodeData = { vlan: number; zone: string; subnet: string; width: number; height: number };
 export type DeviceFlowNode = Node<DeviceNodeData, "device">;
 export type ZoneFlowNode = Node<ZoneNodeData, "zone">;
 export type NetNode = DeviceFlowNode | ZoneFlowNode;
 
-export type LinkEdgeData = { label: string; kind: "chain" | "access"; wan: boolean; vlan?: number };
+export type LinkEdgeData = { label: string; kind: "chain" | "access"; wan?: Uplink; lane?: Uplink; vlan?: number };
 export type LinkFlowEdge = Edge<LinkEdgeData, "link">;
 
-const RANK: Record<PtDevice["kind"], number> = { cloud: 0, router: 1, switch: 2, server: 3, pc: 3 };
+const laneOf = (d: PtDevice) => (d.uplink === "r2" ? 1 : 0);
 
 export function buildLayout() {
   const zones: ZoneFlowNode[] = [];
@@ -63,67 +78,68 @@ export function buildLayout() {
     });
     x += w + G.zoneGap;
   }
-  const width = Math.max(x - G.zoneGap, G.cloudW + G.routerW + G.switchW + 300);
-
-  const cloud = ptDevices.find((d) => d.kind === "cloud");
-  const router = ptDevices.find((d) => d.kind === "router");
-  const sw = ptDevices.find((d) => d.kind === "switch");
-
-  // Spread the free width between the two chain links (the OSPF label is longer).
-  const free = width - (G.cloudW + G.routerW + G.switchW);
-  const gapWan = Math.round(free * 0.44);
-  const swX = width - G.switchW;
-  const routerX = G.cloudW + gapWan;
+  const zonesW = x - G.zoneGap;
+  const chainW = COL.switch + G.switchW;
+  // Centre the zones under the lanes when the lanes are wider.
+  const shift = Math.max(0, Math.round((chainW - zonesW) / 2));
+  if (shift) {
+    for (const n of [...zones, ...hosts]) n.position = { ...n.position, x: n.position.x + shift };
+  }
+  const width = Math.max(zonesW + shift, chainW);
 
   // Align the switch downlink with the host centre nearest to it → one straight drop.
   const centres = hosts.map((h) => h.position.x + G.hostW / 2);
-  const swMid = swX + G.switchW / 2;
+  const swMid = COL.switch + G.switchW / 2;
   const nearest = centres.reduce((a, b) => (Math.abs(b - swMid) < Math.abs(a - swMid) ? b : a), swMid);
-  const downlinkX = Math.min(G.switchW - 28, Math.max(28, nearest - swX));
+  const downlinkX = Math.min(G.switchW - 28, Math.max(28, nearest - COL.switch));
 
   const chain: DeviceFlowNode[] = [];
-  const push = (d: PtDevice | undefined, px: number, w: number, extra?: Partial<DeviceNodeData>) => {
-    if (!d) return;
+  const push = (d: PtDevice, px: number, py: number, w: number, variant: DeviceNodeData["variant"], extra?: Partial<DeviceNodeData>) => {
     chain.push({
       id: d.id,
       type: "device",
-      position: { x: px, y: 0 },
-      data: { device: d, variant: "chain", width: w, ...extra },
+      position: { x: px, y: py },
+      data: { device: d, variant, width: w, ...extra },
       draggable: false,
       selectable: false,
       focusable: false,
       zIndex: 1,
     });
   };
-  push(cloud, 0, G.cloudW);
-  push(router, routerX, G.routerW);
-  push(sw, swX, G.switchW, { downlinkX });
+  for (const d of ptDevices) {
+    if (d.kind === "cloud") push(d, COL.cloud, MID_Y, G.cloudW, "compact");
+    else if (d.kind === "carrier") push(d, COL.carrier, G.laneY[laneOf(d)], G.carrierW, "compact");
+    else if (d.kind === "router") push(d, COL.router, G.laneY[laneOf(d)], G.routerW, "chain");
+    else if (d.kind === "switch") push(d, COL.switch, MID_Y, G.switchW, "chain", { downlinkX });
+  }
 
   const byId = new Map(ptDevices.map((d) => [d.id, d]));
   const edges: LinkFlowEdge[] = ptLinks.flatMap((l, i) => {
-    const a = byId.get(l.from);
-    const b = byId.get(l.to);
-    if (!a || !b) return [];
-    const [src, dst] = RANK[a.kind] <= RANK[b.kind] ? [a, b] : [b, a];
-    const access = RANK[dst.kind] === 3;
-    const wan = "wan" in l && l.wan === true;
+    const src = byId.get(l.from);
+    const dst = byId.get(l.to);
+    if (!src || !dst) return [];
+    const access = dst.vlan !== undefined;
+    const lane = l.lane === "r2" ? "2" : "1";
+    const sourceHandle = access ? "b" : src.kind === "cloud" ? `r${lane}` : "r";
+    const targetHandle = access ? "t" : dst.kind === "switch" ? `l${lane}` : "l";
     return [
       {
         id: `link-${i}`,
         type: "link",
         source: src.id,
         target: dst.id,
-        sourceHandle: access ? "b" : "r",
-        targetHandle: access ? "t" : "l",
+        sourceHandle,
+        targetHandle,
         selectable: false,
         focusable: false,
-        data: { label: l.label, kind: access ? "access" : "chain", wan, vlan: access ? dst.vlan : undefined },
+        data: { label: l.label, kind: access ? "access" : "chain", wan: l.wan, lane: l.lane, vlan: access ? dst.vlan : undefined },
       },
     ];
   });
 
-  // DOM (and so Tab) order follows the network: cloud → router → switch → each VLAN zone, then its hosts.
-  // Stacking is handled by zIndex, so zones still sit underneath their hosts.
+  // DOM (and so Tab) order follows the network: cloud → carriers → routers → switch → each VLAN zone, then its hosts.
+  const order = { cloud: 0, carrier: 1, router: 2, switch: 3 } as Record<string, number>;
+  chain.sort((a, b) => (order[a.data.device.kind] ?? 9) - (order[b.data.device.kind] ?? 9));
   const nodes: NetNode[] = [...chain, ...zones.flatMap((z) => [z, ...hosts.filter((h) => h.data.device.vlan === z.data.vlan)])];
   return { nodes, edges, width, height: G.zoneTop + zoneH };
 }

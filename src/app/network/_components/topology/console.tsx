@@ -78,6 +78,9 @@ export function useConsoleTicker(state: ConState, dispatch: React.Dispatch<ConAc
 /* ------------------------------------------------------------------ */
 
 function LogText({ text }: { text: string }) {
+  if (/Destination host unreachable|^Request timed out/.test(text)) return <span className="text-[#ffb86c]">{text}</span>;
+  if (/^Reply from .*TTL=/.test(text)) return <span className="text-[#50fa7b]">{text}</span>;
+  if (/^O\*E2 /.test(text)) return <span className="text-[#8be9fd]">{text}</span>;
   const m = text.match(/^(%[A-Z0-9_]+-\d-[A-Z0-9_]+:)(.*)$/);
   if (!m) return <>{text}</>;
   const s = m[2].match(/^(.*changed state to )(administratively down|down|up)(.*)$/);

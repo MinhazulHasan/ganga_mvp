@@ -22,7 +22,11 @@ import {
   MousePointerClickIcon,
   MoveHorizontalIcon,
   NetworkIcon,
+  RotateCcwIcon,
+  RouteIcon,
+  SatelliteDishIcon,
   ScanIcon,
+  SignalIcon,
   ZoomInIcon,
   ZoomOutIcon,
 } from "lucide-react";
@@ -32,10 +36,11 @@ import { Provenance } from "@/components/brand/provenance";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useCommandStore } from "@/lib/stores/command-store";
-import { iosLog, ptDevices } from "@/content/network";
-import { useMediaQuery, useMounted, useNetworkState, usePrefersReducedMotion } from "../network-state";
+import { awsServer, defaultRouteLine, noShutLines, pingLines, shutLines, uplinks, type Uplink } from "@/content/network";
+import { Button } from "@/components/ui/button";
+import { activeRoute, useMediaQuery, useMounted, useNetworkState, usePrefersReducedMotion, type UplinkDown } from "../network-state";
 import { NetSheet, useNetSheet } from "../net-sheet";
-import { ospfFacts, parseIos, type IosLine } from "../net-utils";
+import { parseIos, type IosLine } from "../net-utils";
 import type { WanOutcome } from "../wan-outcome";
 import { buildLayout, type LinkFlowEdge, type NetNode } from "./layout";
 import { DeviceNode, TopologyActionsContext, ZoneNode } from "./nodes";
@@ -47,32 +52,70 @@ const nodeTypes: NodeTypes = { device: DeviceNode, zone: ZoneNode };
 const edgeTypes: EdgeTypes = { link: LinkEdge };
 const FIT: FitViewOptions = { padding: { top: "24px", right: "28px", bottom: "60px", left: "28px" }, maxZoom: 1 };
 
-const router = ptDevices.find((d) => d.kind === "router");
-const routerName = router?.label ?? "GANGA-R1";
 /** "Local SMS" → "local SMS", "E-mail" → "e-mail", but keep acronyms like "SMS". */
 const lc = (s: string) => (/^[A-Z][a-z-]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s);
 const listJoin = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
 
-const CUT: IosLine[] = [...parseIos(iosLog.cut), { kind: "note", text: `! ${iosLog.ospfNote}` }];
-const RESTORE: IosLine[] = parseIos(iosLog.restore);
+const SHOW_ROUTE: IosLine = { kind: "cmd", prompt: "GANGA-SW#", text: "show ip route ospf" };
 const INTRO: IosLine[] = [
-  { kind: "note", text: `! ${routerName} · ${router?.model ?? "Cisco 2911"} · Cisco Packet Tracer` },
-  { kind: "note", text: `! ${router?.addressing ?? ""}` },
-  { kind: "note", text: "! Flip “Shut down Gi0/1 (WAN)” to run the failover test." },
+  { kind: "note", text: "! GANGA edge · Cisco Packet Tracer · GANGA-R1, GANGA-R2 and GANGA-SW" },
+  { kind: "note", text: "! Both routers send a default route into OSPF. Cost 1 (cellular) beats cost 100 (satellite)." },
+  SHOW_ROUTE,
+  { kind: "log", text: defaultRouteLine("r1", "00:12:31") ?? "" },
+  { kind: "note", text: "! Cut cellular, then satellite, to run the failover test." },
 ];
-const firstCmd = CUT.find((l): l is Extract<IosLine, { kind: "cmd" }> => l.kind === "cmd");
-const FIRST_PROMPT = firstCmd?.prompt ?? `${routerName}(config)#`;
 
-export function Topology({ outcome }: { outcome: WanOutcome }) {
-  const { wanDown, setWanDown } = useNetworkState();
+const routeNote = (from: Uplink | null, to: Uplink | null): string => {
+  if (from === to) {
+    return to ? `! Default route unchanged: traffic stays on ${uplinks[to].router} (${uplinks[to].medium}).` : "! Still no default route. The station stays offline.";
+  }
+  if (!to) return "! No default route left. The station runs offline: the engine, sirens and local SMS keep working.";
+  if (to === "r2") return "! GANGA-R1 withdrew its default route. OSPF moved it to GANGA-R2: traffic now leaves by satellite.";
+  return from === "r2"
+    ? "! GANGA-R1 is back. Cost 1 beats 100, so traffic returns to cellular."
+    : "! Default route via GANGA-R1. The station is back online over cellular.";
+};
+
+/** The broker (10.0.20.10) pings the AWS server, like in Swarnima's recording. */
+function pingFromBroker(result: "ok" | "failover" | "offline"): IosLine[] {
+  return [
+    { kind: "note", text: "! Broker + Fusion server (10.0.20.10) pings the AWS server" },
+    { kind: "cmd", prompt: "C:\\>", text: `ping ${awsServer}` },
+    ...pingLines(result).map((text): IosLine => ({ kind: "log", text })),
+  ];
+}
+
+/** IOS lines for one uplink change: the router command, what the switch now routes, then a ping to the cloud. */
+function sequenceFor(id: Uplink, goingDown: boolean, before: UplinkDown, withPing = true): IosLine[] {
+  const after = { ...before, [id]: goingDown };
+  const from = activeRoute(before);
+  const to = activeRoute(after);
+  const host = uplinks[id].router;
+  const lines: IosLine[] = parseIos(goingDown ? shutLines(host) : noShutLines(host));
+  if (from !== to) {
+    lines.push(SHOW_ROUTE);
+    const route = defaultRouteLine(to);
+    if (route) lines.push({ kind: "log", text: route });
+  }
+  lines.push({ kind: "note", text: routeNote(from, to) });
+  if (withPing) lines.push(...pingFromBroker(!to ? "offline" : from !== to && from !== null && goingDown ? "failover" : "ok"));
+  return lines;
+}
+
+const SWITCH_META: Record<Uplink, { label: string; short: string; icon: typeof SignalIcon }> = {
+  r1: { label: "Cut cellular (R1)", short: "Cellular", icon: SignalIcon },
+  r2: { label: "Cut satellite (R2)", short: "Satellite", icon: SatelliteDishIcon },
+};
+
+export function Topology({ outcome, configs }: { outcome: WanOutcome; configs: Record<string, string> }) {
+  const { down, setUplink, route } = useNetworkState();
   const sheet = useNetSheet();
   const mounted = useMounted();
   const finePointer = useMediaQuery("(pointer: fine)", true);
   const reduce = usePrefersReducedMotion();
   const layout = React.useMemo(() => buildLayout(), []);
-  const ospf = ospfFacts();
 
-  const [con, dispatch] = React.useReducer(consoleReducer, undefined, () => initConsole(INTRO, FIRST_PROMPT));
+  const [con, dispatch] = React.useReducer(consoleReducer, undefined, () => initConsole(INTRO, "GANGA-SW#"));
   const scrollerRef = React.useRef<HTMLDivElement>(null);
   useConsoleTicker(con, dispatch);
 
@@ -86,52 +129,84 @@ export function Topology({ outcome }: { outcome: WanOutcome }) {
   );
 
   const setWan = React.useCallback(
-    (down: boolean) => {
-      setWanDown(down);
-      dispatch({ type: "run", seq: down ? CUT : RESTORE, now: Date.now(), instant: reduce });
-      // On narrow screens the canvas scrolls sideways: bring the WAN link into view.
+    (id: Uplink, goingDown: boolean) => {
+      if (down[id] === goingDown) return;
+      const after = { ...down, [id]: goingDown };
+      const to = activeRoute(after);
+      setUplink(id, goingDown);
+      dispatch({ type: "run", seq: sequenceFor(id, goingDown, down), now: Date.now(), instant: reduce });
+      // On narrow screens the canvas scrolls sideways: bring the changed WAN link into view.
       const scroller = scrollerRef.current;
-      const label = scroller?.querySelector<HTMLElement>("[data-wan-label]");
+      const label = scroller?.querySelector<HTMLElement>(`[data-wan-label="${id}"]`);
       if (scroller && label && scroller.scrollWidth > scroller.clientWidth + 1) {
         const sr = scroller.getBoundingClientRect();
         const lr = label.getBoundingClientRect();
         const left = scroller.scrollLeft + (lr.left + lr.width / 2) - (sr.left + sr.width / 2);
         scroller.scrollTo({ left, behavior: reduce ? "auto" : "smooth" });
       }
-      if (down) {
-        toast(`Gi0/1 shut down on ${routerName}`, {
-          description: `WAN is down. OSPF neighbour ${ospf.neighbour} stays ${ospf.state}; the ${listJoin(outcome.local.map((c) => lc(c.short)))} still work from the edge.`,
-          icon: <CloudOffIcon className="size-4 text-emergency" />,
+      const u = uplinks[id];
+      const medium = u.medium.charAt(0).toUpperCase() + u.medium.slice(1);
+      if (goingDown) {
+        toast(`${medium} cut · Gi0/1 shut on ${u.router}`, {
+          description: to
+            ? to === route
+              ? `Backup lost. Traffic stays on ${uplinks[to].router} (${uplinks[to].medium}).`
+              : `OSPF moved the default route to ${uplinks[to].router}. The cloud stays reachable over ${uplinks[to].medium}.`
+            : `Both uplinks down. The ${listJoin(outcome.local.map((c) => lc(c.short)))} still work from the station.`,
+          icon: to ? <RouteIcon className="size-4 text-watch" /> : <CloudOffIcon className="size-4 text-emergency" />,
         });
       } else {
-        toast(`Gi0/1 back up on ${routerName}`, {
-          description: `WAN restored. ${listJoin(outcome.cloud.map((c, i) => (i === 0 ? c.short : lc(c.short))))} can deliver again.`,
+        toast(`${medium} restored · Gi0/1 up on ${u.router}`, {
+          description: to === route ? `Backup ready again. Traffic stays on ${uplinks[to!].router}.` : `Default route via ${uplinks[to!].router} (${uplinks[to!].medium}).`,
           icon: <CloudCheckIcon className="size-4 text-normal" />,
         });
       }
     },
-    [setWanDown, reduce, ospf.neighbour, ospf.state, outcome.local, outcome.cloud]
+    [down, route, setUplink, reduce, outcome.local]
   );
+
+  const reset = React.useCallback(() => {
+    if (!down.r1 && !down.r2) {
+      toast("Both uplinks are already up", { description: "Default route via GANGA-R1 (cellular)." });
+      return;
+    }
+    const seq: IosLine[] = [];
+    let state = down;
+    for (const id of ["r1", "r2"] as const) {
+      if (!state[id]) continue;
+      seq.push(...sequenceFor(id, false, state, false));
+      state = { ...state, [id]: false };
+    }
+    setUplink("r1", false);
+    setUplink("r2", false);
+    seq.push(...pingFromBroker("ok"));
+    dispatch({ type: "run", seq, now: Date.now(), instant: reduce });
+    toast("Both uplinks back up", { description: "Default route via GANGA-R1 (cellular). Satellite on standby.", icon: <CloudCheckIcon className="size-4 text-normal" /> });
+  }, [down, setUplink, reduce]);
 
   // ⌘K: run the failover test from anywhere on the page.
   const register = useCommandStore((s) => s.register);
   React.useEffect(
     () =>
-      register([
-        {
-          id: "network-wan",
+      register(
+        (["r1", "r2"] as const).map((id) => ({
+          id: `network-wan-${id}`,
           group: "Network",
-          label: wanDown ? "Bring Gi0/1 (WAN) back up" : "Shut down Gi0/1 (WAN)",
-          keywords: ["wan", "failover", "shutdown", "gi0/1", "ospf", "packet tracer"],
-          icon: wanDown ? <CloudCheckIcon /> : <CloudOffIcon />,
+          label: down[id] ? `Restore ${uplinks[id].medium} (${uplinks[id].router})` : `Cut ${uplinks[id].medium} (${uplinks[id].router})`,
+          keywords: ["wan", "failover", "shutdown", "gi0/1", "ospf", "packet tracer", uplinks[id].medium],
+          icon: down[id] ? <CloudCheckIcon /> : <CloudOffIcon />,
           run: () => {
-            setWan(!wanDown);
+            setWan(id, !down[id]);
             document.getElementById("topology")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
           },
-        },
-      ]),
-    [register, wanDown, setWan, reduce]
+        }))
+      ),
+    [register, down, setWan, reduce]
   );
+
+  const statusText = route
+    ? `Default route via ${uplinks[route].router} over ${uplinks[route].medium}.${route === "r2" ? " Cellular is down." : down.r2 ? " Satellite backup is down." : ""}`
+    : "Both uplinks are down. The station runs offline.";
 
   return (
     <TopologyActionsContext.Provider value={actions}>
@@ -152,22 +227,32 @@ export function Topology({ outcome }: { outcome: WanOutcome }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            <OspfChip neighbour={ospf.neighbour} iface={ospf.iface} state={ospf.state} wanDown={wanDown} reduce={reduce} />
-            <div
-              className={cn(
-                "flex h-10 items-center gap-3 rounded-[13px] py-1 pl-3.5 pr-1.5 transition-colors duration-300",
-                wanDown ? "bg-emergency-soft" : "bg-surface-2 hairline"
-              )}
-            >
-              <label htmlFor="wan-switch" className={cn("cursor-pointer select-none text-[13px] font-medium", wanDown && "text-emergency")}>
-                Shut down Gi0/1 (WAN)
-              </label>
-              <Switch id="wan-switch" tone="danger" checked={wanDown} onCheckedChange={setWan} aria-describedby="wan-status" />
-            </div>
+            <RouteChip route={route} reduce={reduce} />
+            {(["r1", "r2"] as const).map((id) => {
+              const meta = SWITCH_META[id];
+              const Icon = meta.icon;
+              return (
+                <div
+                  key={id}
+                  className={cn(
+                    "flex h-10 items-center gap-2.5 rounded-[13px] py-1 pl-3 pr-1.5 transition-colors duration-300",
+                    down[id] ? "bg-emergency-soft" : "bg-surface-2 hairline"
+                  )}
+                >
+                  <Icon className={cn("size-4 shrink-0", down[id] ? "text-emergency" : "text-muted")} aria-hidden />
+                  <label htmlFor={`wan-${id}`} className={cn("cursor-pointer select-none whitespace-nowrap text-[13px] font-medium", down[id] && "text-emergency")}>
+                    {meta.label}
+                  </label>
+                  <Switch id={`wan-${id}`} tone="danger" checked={down[id]} onCheckedChange={(v) => setWan(id, v)} aria-describedby="wan-status" />
+                </div>
+              );
+            })}
+            <Button variant="outline" size="sm" onClick={reset} className="h-10 rounded-[13px]">
+              <RotateCcwIcon />
+              Reset
+            </Button>
             <p id="wan-status" className="sr-only" aria-live="polite">
-              {wanDown
-                ? `Gi0/1 is administratively down. OSPF neighbour ${ospf.neighbour} on ${ospf.iface} stays ${ospf.state}. The internet is unreachable from the camp.`
-                : "Gi0/1 is up. The WAN link to the internet is working."}
+              {statusText}
             </p>
           </div>
         </div>
@@ -176,9 +261,9 @@ export function Topology({ outcome }: { outcome: WanOutcome }) {
         <div className="relative border-b border-border">
           <div ref={scrollerRef} className="overflow-x-auto overscroll-x-contain [scrollbar-width:thin] lg:overflow-x-visible">
             <div
-              className="ganga-flow relative h-[540px] min-w-[1140px] bg-background lg:h-[560px] lg:min-w-0"
+              className="ganga-flow relative h-[600px] min-w-[1180px] bg-background lg:h-[660px] lg:min-w-0"
               role="group"
-              aria-label="GANGA edge topology: AWS / Internet, edge router GANGA-R1, Layer-3 switch GANGA_SW and four VLANs"
+              aria-label="GANGA edge topology: Internet and AWS, two carriers, GANGA-R1 on cellular and GANGA-R2 on satellite, Layer-3 switch GANGA-SW and four VLANs"
             >
               {mounted ? (
                 <ReactFlow<NetNode, LinkFlowEdge>
@@ -232,46 +317,49 @@ export function Topology({ outcome }: { outcome: WanOutcome }) {
 
         {/* Console + what still works */}
         <div className="grid grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)]">
-          <ConsolePanel state={con} title={routerName} className="h-[300px] lg:h-auto lg:min-h-[300px]" />
+          <ConsolePanel state={con} title="Packet Tracer CLI" className="h-[320px] lg:h-auto lg:min-h-[320px]" />
           <WanCallout outcome={outcome} />
         </div>
       </div>
 
-      <NetSheet api={sheet} />
+      <NetSheet api={sheet} configs={configs} />
     </TopologyActionsContext.Provider>
   );
 }
 
 /* ------------------------------------------------------------------ */
 
-function OspfChip({ neighbour, iface, state, wanDown, reduce }: { neighbour: string; iface: string; state: string; wanDown: boolean; reduce: boolean }) {
+function RouteChip({ route, reduce }: { route: Uplink | null; reduce: boolean }) {
+  const u = route ? uplinks[route] : null;
+  const tone = !u ? "bg-emergency-soft text-emergency" : route === "r1" ? "bg-normal-soft text-normal" : "bg-watch-soft text-watch";
+  const dot = !u ? "bg-emergency-fill" : route === "r1" ? "bg-normal-fill" : "bg-watch";
   return (
     <motion.span
       layout={!reduce}
-      className="inline-flex h-10 items-center gap-2 rounded-[13px] bg-normal-soft px-3.5 text-[12.5px] font-medium text-normal"
+      className={cn("inline-flex h-10 items-center gap-2 rounded-[13px] px-3.5 text-[12.5px] font-medium transition-colors duration-300", tone)}
       transition={{ type: "spring", stiffness: 500, damping: 40 }}
     >
       <span className="relative flex size-2" aria-hidden>
-        <span className="absolute inset-0 rounded-full bg-normal-fill animate-pulse-ring" />
-        <span className="relative size-2 rounded-full bg-normal-fill" />
+        {u && <span className={cn("absolute inset-0 rounded-full animate-pulse-ring", dot)} />}
+        <span className={cn("relative size-2 rounded-full", dot)} />
       </span>
-      <span className="font-semibold">OSPF</span>
-      <span className="text-foreground/80 dark:text-foreground/85">
-        Neighbour <span className="font-mono text-[12px]">{neighbour}</span> on <span className="font-mono text-[12px]">{iface}</span> ·{" "}
-        <span className="font-semibold text-normal">{state}</span>
-      </span>
-      <AnimatePresence initial={false}>
-        {wanDown && (
-          <motion.span
-            key="unchanged"
-            initial={reduce ? false : { opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={reduce ? undefined : { opacity: 0, scale: 0.85 }}
-            className="rounded-full bg-surface px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-normal ring-1 ring-normal/25"
-          >
-            unchanged
-          </motion.span>
-        )}
+      <span className="font-semibold">Default route</span>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={route ?? "none"}
+          initial={reduce ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduce ? undefined : { opacity: 0, y: -6 }}
+          className="text-foreground/80 dark:text-foreground/85"
+        >
+          {u ? (
+            <>
+              via <span className="font-mono text-[12px]">{u.router}</span> · {u.medium}
+            </>
+          ) : (
+            <span className="font-semibold text-emergency">none · offline</span>
+          )}
+        </motion.span>
       </AnimatePresence>
     </motion.span>
   );

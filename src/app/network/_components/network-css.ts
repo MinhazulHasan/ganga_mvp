@@ -13,6 +13,7 @@ export const networkCss = `
   --net-vlan-50: #f08c00; --net-vlan-50-text: #a35300;
   --net-link: color-mix(in srgb, var(--foreground) 24%, var(--background));
   --net-link-strong: color-mix(in srgb, var(--foreground) 42%, var(--background));
+  --net-link-live: color-mix(in srgb, var(--normal-fill) 78%, var(--foreground));
   --net-term-bg: #0c0d28;
   --net-term-bar: #16183a;
 }
@@ -33,4 +34,8 @@ export const networkCss = `
 .ganga-flow .react-flow__edge { pointer-events: none; }
 .ganga-flow .react-flow__edge-path { transition: stroke .35s ease, stroke-width .35s ease; }
 .ganga-flow .react-flow__handle { opacity: 0; pointer-events: none; min-width: 0; min-height: 0; width: 1px; height: 1px; border: 0; }
+/* Live WAN path: dashes run from the station up to the cloud. */
+.ganga-flow .net-flow { stroke: var(--background); opacity: .85; stroke-dasharray: 3 11; animation: net-flow 1.1s linear infinite; }
+@keyframes net-flow { to { stroke-dashoffset: 14; } }
+@media (prefers-reduced-motion: reduce) { .ganga-flow .net-flow { display: none; } }
 `;

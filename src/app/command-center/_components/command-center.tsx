@@ -21,11 +21,12 @@ import { VillagesPanel } from "./villages-panel";
 import { NetworkMini } from "./network-mini";
 import { DeliveryTimeline } from "./delivery-timeline";
 import { AlertOutput, type CapBundle } from "./alert-output";
+import { AtlasPanel } from "./atlas-panel";
 import { DetailSheet } from "./detail-sheet";
 import { WhatIfBadge } from "./what-if";
 import { BroadcastEditor, CustomBroadcastBadge } from "./broadcast-editor";
 
-export function CommandCenter({ caps }: { caps: CapBundle }) {
+export function CommandCenter({ caps, atlas = false }: { caps: CapBundle; atlas?: boolean }) {
   usePlaybackLoop();
   useKeyboardShortcuts();
   useCommandActions();
@@ -43,6 +44,7 @@ export function CommandCenter({ caps }: { caps: CapBundle }) {
           <EvidenceFeed className="lg:col-span-6 xl:col-span-4" />
           <VillagesPanel className="lg:col-span-6 xl:col-span-5" />
           <NetworkMini className="lg:col-span-12 xl:col-span-3" />
+          {atlas && <AtlasPanel className="lg:col-span-12" />}
           <DeliveryTimeline className="lg:col-span-12" />
           <AlertOutput caps={caps} className="lg:col-span-12" />
         </div>

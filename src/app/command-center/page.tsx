@@ -30,5 +30,6 @@ async function buildCaps(): Promise<CapBundle> {
 
 export default async function Page() {
   const caps = await buildCaps();
-  return <CommandCenter caps={caps} />;
+  // The Atlas panel only exists when the deployment has a database (MONGODB_URI, server-side).
+  return <CommandCenter caps={caps} atlas={Boolean(process.env.MONGODB_URI)} />;
 }

@@ -1,0 +1,123 @@
+! GANGA-SW - Cisco 3650-24PS (stand-in for Catalyst 9200L)
+! Core L3 switch: VLANs, inter-VLAN routing, DHCP, ACLs, OSPF
+hostname GANGA-SW
+no ip domain-lookup
+ip routing
+ipv6 unicast-routing
+!
+vlan 10
+ name MGMT
+vlan 20
+ name SERVERS
+vlan 30
+ name IOT
+vlan 50
+ name OPERATORS
+!
+! ---- SVIs (inter-VLAN gateways) ----
+interface Vlan10
+ ip address 10.0.10.1 255.255.255.0
+ ipv6 address 2001:DB8:10::1/64
+ no shutdown
+interface Vlan20
+ ip address 10.0.20.1 255.255.255.0
+ ipv6 address 2001:DB8:20::1/64
+ no shutdown
+interface Vlan30
+ ip address 10.0.30.1 255.255.255.0
+ ipv6 address 2001:DB8:30::1/64
+ ip access-group IOT-IN in
+ no shutdown
+interface Vlan50
+ ip address 10.0.50.1 255.255.255.0
+ ipv6 address 2001:DB8:50::1/64
+ ip access-group OPS-IN in
+ no shutdown
+!
+! ---- Routed uplinks ----
+interface GigabitEthernet1/0/24
+ description To-GANGA-R1-primary
+ no switchport
+ ip address 10.0.0.2 255.255.255.252
+ no shutdown
+interface GigabitEthernet1/0/23
+ description To-GANGA-R2-backup
+ no switchport
+ ip address 10.0.0.6 255.255.255.252
+ ip ospf cost 100
+ no shutdown
+!
+! ---- Access ports ----
+interface GigabitEthernet1/0/1
+ description LoRa-gateway
+ switchport mode access
+ switchport access vlan 30
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+interface GigabitEthernet1/0/5
+ description Admin
+ switchport mode access
+ switchport access vlan 10
+ no shutdown
+interface range GigabitEthernet1/0/10 - 11
+ description Servers
+ switchport mode access
+ switchport access vlan 20
+ no shutdown
+interface GigabitEthernet1/0/20
+ description Operator
+ switchport mode access
+ switchport access vlan 50
+ no shutdown
+!
+! ---- DHCP ----
+ip dhcp excluded-address 10.0.10.1 10.0.10.20
+ip dhcp excluded-address 10.0.30.1 10.0.30.20
+ip dhcp excluded-address 10.0.50.1 10.0.50.20
+ip dhcp pool MGMT
+ network 10.0.10.0 255.255.255.0
+ default-router 10.0.10.1
+ dns-server 10.0.20.11
+ip dhcp pool IOT
+ network 10.0.30.0 255.255.255.0
+ default-router 10.0.30.1
+ dns-server 10.0.20.11
+ip dhcp pool OPS
+ network 10.0.50.0 255.255.255.0
+ default-router 10.0.50.1
+ dns-server 10.0.20.11
+!
+! ---- ACLs ----
+! IoT may reach only the broker on TCP 8883 (MQTT over TLS)
+ip access-list extended IOT-IN
+ permit udp any eq 68 any eq 67
+ permit tcp 10.0.30.0 0.0.0.255 host 10.0.20.10 eq 8883
+ deny ip any any
+! Operators may reach only VLAN 20 services; blocked from IoT and Mgmt
+ip access-list extended OPS-IN
+ permit udp any eq 68 any eq 67
+ permit icmp 10.0.50.0 0.0.0.255 10.0.20.0 0.0.0.255
+ permit tcp 10.0.50.0 0.0.0.255 10.0.20.0 0.0.0.255 eq 443
+ permit tcp 10.0.50.0 0.0.0.255 10.0.20.0 0.0.0.255 eq 80
+ permit udp 10.0.50.0 0.0.0.255 host 10.0.20.11 eq 53
+ deny ip 10.0.50.0 0.0.0.255 10.0.30.0 0.0.0.255
+ deny ip 10.0.50.0 0.0.0.255 10.0.10.0 0.0.0.255
+ deny ip any any
+!
+! ---- OSPF ----
+router ospf 1
+ router-id 2.2.2.2
+ passive-interface default
+ no passive-interface GigabitEthernet1/0/24
+ no passive-interface GigabitEthernet1/0/23
+ network 10.0.0.0 0.0.0.3 area 0
+ network 10.0.0.4 0.0.0.3 area 0
+ network 10.0.10.0 0.0.0.255 area 0
+ network 10.0.20.0 0.0.0.255 area 0
+ network 10.0.30.0 0.0.0.255 area 0
+ network 10.0.50.0 0.0.0.255 area 0

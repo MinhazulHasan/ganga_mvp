@@ -1,0 +1,21 @@
+! INTERNET-AWS - Cisco 2911, stand-in for the public internet and AWS edge
+! Not operated by us; modelled as a single router only because Packet Tracer
+! cannot draw the real, redundant internet.
+hostname INTERNET-AWS
+no ip domain-lookup
+!
+interface GigabitEthernet0/0
+ description To-ISP-A
+ ip address 172.16.1.2 255.255.255.252
+ no shutdown
+interface GigabitEthernet0/1
+ description To-ISP-B
+ ip address 172.16.2.2 255.255.255.252
+ no shutdown
+interface GigabitEthernet0/2
+ description AWS-server
+ ip address 203.0.113.1 255.255.255.252
+ no shutdown
+!
+ip route 198.51.100.0 255.255.255.252 172.16.1.1
+ip route 192.0.2.0 255.255.255.252 172.16.2.1

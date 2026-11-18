@@ -1,0 +1,25 @@
+! GANGA-R2 - Cisco 2911, BACKUP router (satellite uplink)
+! Preferred less than R1 because the switch uses ip ospf cost 100 on Gi1/0/23
+hostname GANGA-R2
+no ip domain-lookup
+!
+interface GigabitEthernet0/0
+ description To-SW-core
+ ip address 10.0.0.5 255.255.255.252
+ ip nat inside
+ no shutdown
+interface GigabitEthernet0/1
+ description WAN-backup-satellite
+ ip address 192.0.2.1 255.255.255.252
+ ip nat outside
+ no shutdown
+!
+ip route 0.0.0.0 0.0.0.0 192.0.2.2
+!
+router ospf 1
+ router-id 3.3.3.3
+ network 10.0.0.4 0.0.0.3 area 0
+ default-information originate
+!
+access-list 1 permit 10.0.0.0 0.255.255.255
+ip nat inside source list 1 interface GigabitEthernet0/1 overload

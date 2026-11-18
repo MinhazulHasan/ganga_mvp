@@ -1,0 +1,10 @@
+End devices (set in Desktop > IP Configuration)
+
+AWS Server-PT        203.0.113.2/30   gw 203.0.113.1   (Fa0 to INTERNET-AWS Gi0/2)
+Broker + Fusion      10.0.20.10/24    gw 10.0.20.1   dns 10.0.20.11   (static, SW Gi1/0/10)
+DNS / Web server     10.0.20.11/24    gw 10.0.20.1                    (static, SW Gi1/0/11)
+Gateway PC           DHCP, VLAN 30    (SW Gi1/0/1)
+Admin PC             DHCP, VLAN 10    (SW Gi1/0/5)
+Operator PC          DHCP, VLAN 50    (SW Gi1/0/20)
+
+Field stations A/B/C: decorative only, not simulated.

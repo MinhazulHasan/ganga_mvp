@@ -1,0 +1,24 @@
+! GANGA-R1 - Cisco 2911, PRIMARY router (cellular uplink)
+hostname GANGA-R1
+no ip domain-lookup
+!
+interface GigabitEthernet0/0
+ description To-SW-core
+ ip address 10.0.0.1 255.255.255.252
+ ip nat inside
+ no shutdown
+interface GigabitEthernet0/1
+ description WAN-primary-cellular
+ ip address 198.51.100.1 255.255.255.252
+ ip nat outside
+ no shutdown
+!
+ip route 0.0.0.0 0.0.0.0 198.51.100.2
+!
+router ospf 1
+ router-id 1.1.1.1
+ network 10.0.0.0 0.0.0.3 area 0
+ default-information originate
+!
+access-list 1 permit 10.0.0.0 0.255.255.255
+ip nat inside source list 1 interface GigabitEthernet0/1 overload

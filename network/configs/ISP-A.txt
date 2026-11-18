@@ -1,0 +1,14 @@
+! ISP-A - Cisco 2911, cellular carrier (outside our responsibility)
+hostname ISP-A
+no ip domain-lookup
+!
+interface GigabitEthernet0/0
+ description To-R1-cellular
+ ip address 198.51.100.2 255.255.255.252
+ no shutdown
+interface GigabitEthernet0/1
+ description To-Internet
+ ip address 172.16.1.1 255.255.255.252
+ no shutdown
+!
+ip route 203.0.113.0 255.255.255.252 172.16.1.2
